@@ -21,7 +21,7 @@
 <header>
   <div class="meta">
     <span class="label">Study · music visualizer for synthesizers</span>
-    <span class="label">Proof 01 · Nov 2026</span>
+    <span class="label">Proof 02 · Nov 2026</span>
   </div>
   <h1>Spectral Relief</h1>
   <p class="lede">Sound becomes a mountain range. Each moment of the spectrum is a ridge; time pushes the ridges back, where they fade and vanish into the mist. The ink comes from the print shop: halftone, stipple or line screen, never a smooth gradient.</p>
@@ -67,6 +67,13 @@
 
       <div class="group">
         <div class="row">
+          <label for="colour">Colour <output id="o-colour">print</output></label>
+          <div class="seg seg-2" role="group" aria-label="Colour" id="colour">
+            <button data-v="print" aria-pressed="true">Print</button>
+            <button data-v="alpenglow" aria-pressed="false">Alpenglow</button>
+          </div>
+        </div>
+        <div class="row">
           <label for="mode">Ink <output id="o-mode">halftone</output></label>
           <div class="seg" role="group" aria-label="Print mode" id="mode">
             <button data-v="am" aria-pressed="true">Halftone</button>
@@ -91,7 +98,7 @@
   <div class="sec-head">
     <span class="label">Moodboard</span>
     <h2 id="mood-t">The mountain as a printed chart</h2>
-    <p>All four references make the same move: a landscape you read like data. None of them uses color, and none uses a continuous outline. The shape comes from ink density, and the edge is always jagged by the dot itself.</p>
+    <p>Two found references and two studies printed by the engine itself make the same move: a landscape you read like data. None of them uses color, and none uses a continuous outline. The shape comes from ink density, and the edge is always jagged by the dot itself.</p>
   </div>
 
   <div class="board">
@@ -100,12 +107,12 @@
       <figcaption><h3>Halftone on paper</h3><p>AM dot at 45°, with visible moiré. A dark crease on the ridge splits the faces; the edge is jagged by the grid, not by drawing.</p></figcaption>
     </figure>
     <figure class="ref r4">
-      <img src="refs/ref-diagrama.jpg" alt="Halftone mountain with a diagonal diagram arrow" loading="lazy">
-      <figcaption><h3>The diagram arrow</h3><p>The mountain becomes a technical figure: an arrow parallel to the slope measures something. This is where the diagonal "time" axis and the blue annotations come from.</p></figcaption>
+      <img src="refs/study-diagram.jpg" alt="Engine study: a halftone range with a diagonal time arrow and a frequency axis in blue" loading="lazy">
+      <figcaption><h3>Study · the diagram arrow</h3><p>Rendered by the FM-1 engine from a synth pad. The mountain becomes a technical figure: an arrow parallel to the slope measures time, and a blue axis measures frequency.</p></figcaption>
     </figure>
     <figure class="ref r2">
-      <img src="refs/ref-nevoa.jpg" alt="Stippled mountains with mist between the layers" loading="lazy">
-      <figcaption><h3>Mist between layers</h3><p>FM stipple. Layers are separated by empty bands of mist; the brightest peak is the absence of ink. Loose dots form a halo in the sky.</p></figcaption>
+      <img src="refs/study-mist.jpg" alt="Engine study: stippled peaks with mist between twelve layers" loading="lazy">
+      <figcaption><h3>Study · mist between layers</h3><p>FM stipple, twelve layers, from the arpeggio. Layers are separated by bands of mist; the brightest peak is the absence of ink. Loose dots form a halo in the sky.</p></figcaption>
     </figure>
     <figure class="ref r3">
       <img src="refs/ref-poeira.jpg" alt="Stippled mountain range dissolving into dust at the base" loading="lazy">
@@ -137,6 +144,23 @@
     <div class="sw dark" style="background:#3F7FB5"><span>Non-photo blue</span><span>#3F7FB5</span></div>
   </div>
   <p class="hint">Ink is never pure black: it leans slightly blue, like the photographed halftone. Blue is only for measurements and labels, like the pencil the film camera ignores.</p>
+
+  <div class="sec-head" style="margin-top:1rem">
+    <span class="label">Colour · second mode</span>
+    <h3>Alpenglow Neon: everything blue, cut by one low warm light</h3>
+    <p>The same screens and layers, but the shadows are petrol and navy, never black or gray, and only the crests and the faces turned to the sun catch tangerine and pink. The sky stays smooth; the masses stay granular. Switch it with Colour in the proof.</p>
+  </div>
+  <figure class="ref alp-study">
+    <img src="refs/study-alpenglow.jpg" alt="Engine study in Alpenglow Neon: dark petrol peaks with orange rims under a blue to lilac sky" loading="lazy">
+  </figure>
+  <div class="palette">
+    <div class="sw dark" style="background:#044185"><span>Sky, top</span><span>#044185</span></div>
+    <div class="sw" style="background:#3595F6"><span>Sky</span><span>#3595F6</span></div>
+    <div class="sw" style="background:#AF83E9"><span>Horizon</span><span>#AF83E9</span></div>
+    <div class="sw dark" style="background:#002732"><span>Shadow</span><span>#002732</span></div>
+    <div class="sw" style="background:#E39E64"><span>Light, crest</span><span>#E39E64</span></div>
+    <div class="sw" style="background:#D37C92"><span>Light, fall</span><span>#D37C92</span></div>
+  </div>
 
   <div class="type">
     <div class="spec">
@@ -192,10 +216,10 @@
           <dt>Drawing</dt><dd>1:1 preview, scaled up without smoothing</dd>
           <dt>Screen size</dt><dd>70% of the proof, 3 px minimum</dd>
           <dt>Layers</dt><dd>55% of the proof</dd>
-          <dt>Spectrum</dt><dd>Short FFT on the firmware's own audio buffer</dd>
+          <dt>Spectrum</dt><dd>1024-point integer FFT on the firmware's audio</dd>
         </dl>
-        <p>It fits as one more firmware page, next to BAILE and RIDDIM. The halftone is periodic, so the threshold map can be a small repeated tile instead of a full screen in memory. All integer math, one column at a time, front to back.</p>
-        <p class="hint">To check on the device: FFT cost per block and how many frames per second are left after audio.</p>
+        <p>The engine is ported to C in <a href="https://github.com/saulofilho/spectral-relief/tree/main/fm1"><code>fm1/</code></a>: a 1024-point integer FFT, no libm, no framebuffer. It fills the screen in strips, the way the FM-1 firmwares already draw, and computes the print screens per pixel instead of storing a threshold map. Both colour modes and all three screens are in.</p>
+        <p class="hint">Runs under 1 ms a frame on a laptop. Not yet run on the device: the next step is a firmware page, measuring FFT cost per block and the frame rate left after audio.</p>
       </div>
     </article>
     <article class="target">
@@ -207,10 +231,11 @@
           <dt>Format</dt><dd>Audio Effect after the synth (Wavetable, Operator, Drift)</dd>
           <dt>Drawing</dt><dd>v8ui or jsui with mgraphics; jit.gl for a large window</dd>
           <dt>Theme</dt><dd>Light ink on Live's graphite</dd>
-          <dt>Spectrum</dt><dd>pfft~ or fft~ inside the device</dd>
+          <dt>Spectrum</dt><dd>pfft~ 2048, Hann, into a buffer~</dd>
         </dl>
         <p>It sits in the chain right after the instrument and draws what it plays. <a href="https://sebas.design/wt">Sebastian Mitchell's</a> Wavetable redesign study is a good yardstick: each unison voice became a readable line. Here, each harmonic becomes a peak.</p>
-        <p class="hint">This site's drawing engine is plain JavaScript, so it ports almost directly to v8ui.</p>
+        <p>The device is in <a href="https://github.com/saulofilho/spectral-relief/tree/main/m4l"><code>m4l/</code></a>: <code>pfft~</code> writes one amplitude per bin into a <code>buffer~</code>, and a <code>v8ui</code> script with the same engine draws it, with Ink, Colour, Depth, Height, Rough, Screen and Freeze as Live parameters.</p>
+        <p class="hint">Built and tested against a mock of Max's JavaScript API; not yet opened in Live.</p>
       </div>
     </article>
   </div>
@@ -231,7 +256,7 @@
   </div>
 </section>
 
-<footer>Spectral Relief · proof 01 · Web Audio + canvas 2D, no libraries. Moodboard references supplied by the study's author.</footer>
+<footer>Spectral Relief · proof 02 · Web Audio + canvas 2D, no libraries · FM-1 port in C · Max for Live device. Two moodboard references supplied by the study's author; the studies are rendered by the engine.</footer>
 </div>
 
 <script src="assets/spectral-relief.js"></script>

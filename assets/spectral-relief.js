@@ -21,7 +21,7 @@ for (let i = 0; i < NZ.length; i++) NZ[i] = rnd();
 const vnoise = x => { const i = Math.floor(x), f = x - i, a = NZ[i & 2047], b = NZ[(i + 1) & 2047], s = f * f * (3 - 2 * f); return a + (b - a) * s; };
 
 // ---------------------------------------------------------------- estado
-const par = { mode: "am", cell: 4.5, planes: 40, height: 0.48, jag: 0.45, shift: 3.2, notes: true,
+const par = { colour: "print", mode: "am", cell: 4.5, planes: 40, height: 0.48, jag: 0.45, shift: 3.2, notes: true,
   cutoff: 0.55, res: 6, spread: 12, release: 0.45, pattern: "arp" };
 const cutoffHz = () => 80 * Math.pow(9000 / 80, par.cutoff);
 let source = "sim", frozen = false;
@@ -186,6 +186,20 @@ function makeInker(mode, cell) {
   return (t, th) => { const a = (t - th) * k; return a < 0 ? 0 : a > 1 ? 1 : a; };
 }
 
+// ---------------------------------------------------------------- Alpenglow Neon
+// Everything blue, cut by one low warm light. Same stops as fm1/sr.c.
+const hex = v => [(v >> 16) & 255, (v >> 8) & 255, v & 255];
+const SKY = [0x044185, 0x3595F6, 0x6B8DEE, 0xAF83E9].map(hex);
+const BODY = [0x044A87, 0x0656A4, 0x7476E2, 0xB177D8].map(hex);
+const LIT = [0xE39E64, 0xE28868, 0xD37C92, 0xE193A3].map(hex);
+const DOTC = [0x002732, 0x044A87, 0x6B8DEE].map(hex);
+const FOGC = [0x1A8BEB, 0x5D8DED].map(hex);
+const mixc = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+function ramp(st, t) {
+  t = clamp(t, 0, 1); const p = t * (st.length - 1), i = Math.min(p | 0, st.length - 2);
+  return mixc(st[i], st[i + 1], p - i);
+}
+
 // ---------------------------------------------------------------- superfícies
 // A mesma cena desenha em várias telas: a prova grande e as prévias de hardware.
 let dirty = true;
@@ -249,6 +263,11 @@ function render(s, phase) {
   const pr = paper[0], pg = paper[1], pb = paper[2], ir = inkC[0], ig = inkC[1], ib = inkC[2];
   const fogH = Math.max(stepY * 2.2, H * 0.04), crease = 1.5 * Math.max(1, sc), faceFall = 40 * Math.max(0.6, sc);
   const fm = par.mode === "fm", sw = Math.max(1, Math.round(5 * Math.max(sc, 0.5))), GL = grain.length;
+  const alp = par.colour === "alpenglow";
+  if (alp && (!s.sky || s.sky.length !== H)) { s.sky = []; for (let y = 0; y < H; y++) s.sky.push(ramp(SKY, y / H)); }
+  const sky = s.sky;
+  const q8 = v => v < 0 ? 0 : v > 255 ? 255 : v | 0;
+  const putc = (i, c, n) => { px[i] = 0xff000000 | (q8(c[2] + n) << 16) | (q8(c[1] + n) << 8) | q8(c[0] + n); };
   const put = (i, a) => {
     const n = (grain[(i * 7) % GL] - 0.5) * 8;
     px[i] = 0xff000000 | ((pb + n + (ib - pb) * a) << 16) | ((pg + n + (ig - pg) * a) << 8) | (pr + n + (ir - pr) * a);
@@ -261,19 +280,33 @@ function render(s, phase) {
       const slope = (ridges[p * W + Math.min(x + sw, W - 1)] - ridges[p * W + Math.max(x - sw, 0)]) / (2 * sw) * 0.4;
       const dz = zs[p] / P, baseDark = 0.8 - 0.62 * Math.pow(dz, 0.8), sl = clamp(-slope * 0.35, -0.28, 0.28);
       const base = bases[p], fade = fades[p], creaseD = 0.24 * (1 - dz);
+      let body, litc, dotc, fogc, face = 0;
+      if (alp) { body = ramp(BODY, dz); litc = ramp(LIT, dz); dotc = ramp(DOTC, dz); fogc = ramp(FOGC, dz); face = sl < 0 ? -sl / 0.28 : 0; }
       for (let y = ry; y < top; y++) {
-        const i = y * W + x, t = y - r;
-        let d = baseDark + sl * Math.exp(-t / faceFall);
-        if (t < crease) d += creaseD;
+        const i = y * W + x, t = y - r, e = Math.exp(-t / faceFall);
+        let d = baseDark + sl * e;
+        if (t < crease && !alp) d += creaseD;
         const m = clamp((y - (base - fogH)) / fogH, 0, 1);
         d *= 1 - 0.9 * m * m;
         d += (grain[i] - 0.5) * 0.14;
         d *= fade;
-        put(i, ink(d < 0 ? 0 : d > 1 ? 1 : d, thr[i]));
+        if (alp) {
+          // warm light only on faces turned to the sun and a thin rim on the crest
+          let L = face * e; if (t < 2 * crease + 1) L = Math.max(L, 0.375 + face / 2);
+          L *= 1 - dz / 2;
+          const mist = mixc(fogc, sky[y], 0.375 + 0.625 * dz);
+          const b = mixc(mixc(body, litc, L), mist, m * m);
+          const dd = d * (1 - 0.7 * L);
+          putc(i, mixc(b, dotc, ink(dd < 0 ? 0 : dd > 1 ? 1 : dd, thr[i])), (grain[(i * 7) % GL] - 0.5) * 6);
+        } else put(i, ink(d < 0 ? 0 : d > 1 ? 1 : d, thr[i]));
       }
       top = ry;
     }
     // céu com poeira, mais densa perto das cristas
+    if (alp) { // smooth sky, a few tiny stars in the upper part
+      for (let y = 0; y < top; y++) { const i = y * W + x; putc(i, grain[i] > 0.9975 && y < H * 0.4 ? mixc(sky[y], [242, 244, 255], 0.6) : sky[y], 0); }
+      continue;
+    }
     for (let y = 0; y < top; y++) {
       const i = y * W + x, q = y / Math.max(top, 1);
       const d = dust * 0.07 * q * q * q * q;
@@ -300,7 +333,8 @@ function findPeak() {
 function annotate(srf, P, offX, baseFront, stepY, mL, span, sc) {
   const { cx, W, H, ridges } = srf;
   const s = Math.max(0.8, Math.min(1.3, sc));
-  cx.strokeStyle = BLUE; cx.fillStyle = BLUE; cx.lineWidth = 1.1 * s;
+  const mark = par.colour === "alpenglow" ? "#F2F4FF" : BLUE;
+  cx.strokeStyle = mark; cx.fillStyle = mark; cx.lineWidth = 1.1 * s;
   cx.font = `${Math.round(10.5 * s)}px "IBM Plex Mono", ui-monospace, monospace`;
   const yA = H * 0.985;
   arrow(cx, mL, yA, mL + span + 10 * s, yA, s);
@@ -388,9 +422,11 @@ function seg(id, key, labels) {
     for (const o of g.querySelectorAll("button")) o.setAttribute("aria-pressed", o === b ? "true" : "false");
     par[key] = b.dataset.v; $("o-" + id).textContent = labels[b.dataset.v]; dirty = true;
     if (key === "mode") { rebuildAll(); drawTiles(); }
+    if (key === "colour") document.body.dataset.colour = b.dataset.v;
   });
 }
 seg("mode", "mode", { am: "halftone", fm: "stipple", line: "lines" });
+seg("colour", "colour", { print: "print", alpenglow: "alpenglow" });
 seg("pattern", "pattern", { arp: "arpeggio", pad: "pad", acid: "acid" });
 $("notes").addEventListener("change", e => { par.notes = e.target.checked; dirty = true; });
 $("play").addEventListener("click", () => {
