@@ -156,7 +156,7 @@ a:hover { color: var(--nonphoto); }
 .screen-fm1 canvas { width: 240px; }
 @media (min-width: 640px) { .screen-fm1 canvas { width: 360px; } }
 .screen-live { background: #18191B; padding: 22px 10px 10px; position: relative; }
-.screen-live::before { content: "Relevo"; position: absolute; top: 4px; left: 10px; font-family: var(--mono); font-size: 0.66rem; color: #A9A9A5; }
+.screen-live::before { content: "Spectral Relief"; position: absolute; top: 4px; left: 10px; font-family: var(--mono); font-size: 0.66rem; color: #A9A9A5; }
 .screen-live canvas { width: 100%; }
 .specs { display: grid; grid-template-columns: max-content 1fr; gap: 0.3rem 1rem; margin: 0; font-size: 0.86rem; }
 .specs dt { font-family: var(--mono); font-size: 0.72rem; color: var(--graphite); padding-top: 0.12rem; }
