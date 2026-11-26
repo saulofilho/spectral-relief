@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Relevo Espectral</title>
-<meta name="description" content="Estudo de visualizador para sintetizadores: o espectro do som como cordilheira impressa em retícula.">
+<meta name="description" content="A music visualizer study for synthesizers: the sound spectrum as a mountain range printed in halftone.">
 <meta name="theme-color" content="#E5E4E0">
 <meta property="og:title" content="Relevo Espectral">
-<meta property="og:description" content="O som vira cordilheira: espectro em retícula, pontilhado ou linhas.">
+<meta property="og:description" content="Sound becomes a mountain range: the spectrum in halftone, stipple or line screen.">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -20,68 +20,68 @@
 
 <header>
   <div class="meta">
-    <span class="label">Estudo · visualizador para sintetizadores</span>
-    <span class="label">Prova 01 · nov 2026</span>
+    <span class="label">Study · music visualizer for synthesizers</span>
+    <span class="label">Proof 01 · Nov 2026</span>
   </div>
   <h1>Relevo Espectral</h1>
-  <p class="lede">O som vira cordilheira. Cada instante do espectro é uma crista; o tempo empurra as cristas para o fundo, onde clareiam e somem na névoa. A tinta é de gráfica: retícula, pontilhado ou trama de linhas, nunca degradê liso.</p>
+  <p class="lede">Sound becomes a mountain range. Each moment of the spectrum is a ridge; time pushes the ridges back, where they fade and vanish into the mist. The ink comes from the print shop: halftone, stipple or line screen, never a smooth gradient.</p>
 </header>
 
-<!-- ======================= PROVA AO VIVO ======================= -->
-<section aria-labelledby="prova-t">
+<!-- ======================= LIVE PROOF ======================= -->
+<section aria-labelledby="proof-t">
   <div class="proof">
     <div class="stage-col">
       <div class="stage" id="stage">
-        <canvas id="cv" aria-label="Visualizador: espectro do som desenhado como cordilheira em retícula"></canvas>
+        <canvas id="cv" aria-label="Visualizer: the sound spectrum drawn as a halftone mountain range"></canvas>
         <i class="crop tl"></i><i class="crop tr"></i><i class="crop bl"></i><i class="crop br"></i>
       </div>
       <div class="readout" aria-live="off">
-        <span id="ro-src">fonte <b>simulação</b></span>
-        <span id="ro-note">pico <b>—</b></span>
-        <span id="ro-cut">corte <b>—</b></span>
+        <span id="ro-src">source <b>simulation</b></span>
+        <span id="ro-note">peak <b>—</b></span>
+        <span id="ro-cut">cutoff <b>—</b></span>
         <span id="ro-fps">— fps</span>
       </div>
     </div>
 
     <div class="panel">
-      <h2 id="prova-t" class="label" style="font-size:.72rem">Prova ao vivo</h2>
+      <h2 id="proof-t" class="label" style="font-size:.72rem">Live proof</h2>
       <div class="group">
         <div class="transport">
-          <button id="play" class="primary">Tocar synth</button>
-          <button id="freeze" aria-pressed="false">Congelar</button>
+          <button id="play" class="primary">Play synth</button>
+          <button id="freeze" aria-pressed="false">Freeze</button>
         </div>
-        <label class="file">Abrir áudio…<input id="file" type="file" accept="audio/*"></label>
+        <label class="file">Open audio…<input id="file" type="file" accept="audio/*"></label>
         <div class="row">
-          <label for="pattern">Padrão <output id="o-pattern">arpejo</output></label>
-          <div class="seg" role="group" aria-label="Padrão do synth" id="pattern">
-            <button data-v="arp" aria-pressed="true">Arpejo</button>
+          <label for="pattern">Pattern <output id="o-pattern">arpeggio</output></label>
+          <div class="seg" role="group" aria-label="Synth pattern" id="pattern">
+            <button data-v="arp" aria-pressed="true">Arpeggio</button>
             <button data-v="pad" aria-pressed="false">Pad</button>
             <button data-v="acid" aria-pressed="false">Acid</button>
           </div>
         </div>
-        <div class="row"><label for="cutoff">Corte do filtro <output id="o-cutoff"></output></label><input id="cutoff" type="range" min="0" max="1" step="0.001" value="0.55"></div>
-        <div class="row"><label for="res">Ressonância <output id="o-res"></output></label><input id="res" type="range" min="0.5" max="22" step="0.1" value="6"></div>
+        <div class="row"><label for="cutoff">Filter cutoff <output id="o-cutoff"></output></label><input id="cutoff" type="range" min="0" max="1" step="0.001" value="0.55"></div>
+        <div class="row"><label for="res">Resonance <output id="o-res"></output></label><input id="res" type="range" min="0.5" max="22" step="0.1" value="6"></div>
         <div class="row"><label for="spread">Detune <output id="o-spread"></output></label><input id="spread" type="range" min="0" max="40" step="1" value="12"></div>
         <div class="row"><label for="release">Release <output id="o-release"></output></label><input id="release" type="range" min="0.05" max="3" step="0.01" value="0.45"></div>
       </div>
 
       <div class="group">
         <div class="row">
-          <label for="mode">Tinta <output id="o-mode">retícula</output></label>
-          <div class="seg" role="group" aria-label="Modo de impressão" id="mode">
-            <button data-v="am" aria-pressed="true">Retícula</button>
-            <button data-v="fm" aria-pressed="false">Pontilhado</button>
-            <button data-v="line" aria-pressed="false">Linhas</button>
+          <label for="mode">Ink <output id="o-mode">halftone</output></label>
+          <div class="seg" role="group" aria-label="Print mode" id="mode">
+            <button data-v="am" aria-pressed="true">Halftone</button>
+            <button data-v="fm" aria-pressed="false">Stipple</button>
+            <button data-v="line" aria-pressed="false">Lines</button>
           </div>
         </div>
-        <div class="row"><label for="cell">Lineatura <output id="o-cell"></output></label><input id="cell" type="range" min="3" max="10" step="0.5" value="4.5"></div>
-        <div class="row"><label for="planes">Profundidade <output id="o-planes"></output></label><input id="planes" type="range" min="10" max="64" step="1" value="40"></div>
-        <div class="row"><label for="height">Altura <output id="o-height"></output></label><input id="height" type="range" min="0.15" max="0.75" step="0.01" value="0.48"></div>
-        <div class="row"><label for="jag">Aspereza <output id="o-jag"></output></label><input id="jag" type="range" min="0" max="1" step="0.01" value="0.45"></div>
-        <div class="row"><label for="shift">Deriva diagonal <output id="o-shift"></output></label><input id="shift" type="range" min="0" max="8" step="0.1" value="3.2"></div>
-        <label class="check"><input id="notes" type="checkbox" checked> Anotações em azul não-reprodutível</label>
+        <div class="row"><label for="cell">Screen size <output id="o-cell"></output></label><input id="cell" type="range" min="3" max="10" step="0.5" value="4.5"></div>
+        <div class="row"><label for="planes">Depth <output id="o-planes"></output></label><input id="planes" type="range" min="10" max="64" step="1" value="40"></div>
+        <div class="row"><label for="height">Height <output id="o-height"></output></label><input id="height" type="range" min="0.15" max="0.75" step="0.01" value="0.48"></div>
+        <div class="row"><label for="jag">Roughness <output id="o-jag"></output></label><input id="jag" type="range" min="0" max="1" step="0.01" value="0.45"></div>
+        <div class="row"><label for="shift">Diagonal drift <output id="o-shift"></output></label><input id="shift" type="range" min="0" max="8" step="0.1" value="3.2"></div>
+        <label class="check"><input id="notes" type="checkbox" checked> Annotations in non-photo blue</label>
       </div>
-      <p class="hint">Sem som, a prova roda uma simulação do arpejo. O áudio só começa depois do clique em Tocar.</p>
+      <p class="hint">With no sound, the proof runs a simulation of the arpeggio. Audio only starts after you click Play.</p>
     </div>
   </div>
 </section>
@@ -90,86 +90,86 @@
 <section aria-labelledby="mood-t">
   <div class="sec-head">
     <span class="label">Moodboard</span>
-    <h2 id="mood-t">Montanha como gráfico impresso</h2>
-    <p>As quatro referências têm o mesmo gesto: um relevo que se lê como dado. Nenhuma usa cor, nenhuma usa linha de contorno contínua. A forma surge da densidade de tinta, e a borda é sempre serrilhada pelo próprio ponto.</p>
+    <h2 id="mood-t">The mountain as a printed chart</h2>
+    <p>All four references make the same move: a landscape you read like data. None of them uses color, and none uses a continuous outline. The shape comes from ink density, and the edge is always jagged by the dot itself.</p>
   </div>
 
   <div class="board">
     <figure class="ref r1">
-      <img src="refs/ref-reticula.jpg" alt="Montanhas em retícula impressa sobre papel texturizado" loading="lazy">
-      <figcaption><h3>Retícula sobre papel</h3><p>Ponto AM a 45°, moiré visível. O vinco escuro na crista separa as faces; a borda é serrilhada pela grade, não por desenho.</p></figcaption>
+      <img src="refs/ref-reticula.jpg" alt="Mountains in printed halftone on textured paper" loading="lazy">
+      <figcaption><h3>Halftone on paper</h3><p>AM dot at 45°, with visible moiré. A dark crease on the ridge splits the faces; the edge is jagged by the grid, not by drawing.</p></figcaption>
     </figure>
     <figure class="ref r4">
-      <img src="refs/ref-diagrama.jpg" alt="Montanha em retícula com seta diagonal de diagrama" loading="lazy">
-      <figcaption><h3>A seta do diagrama</h3><p>A montanha vira figura técnica: uma seta paralela à encosta mede alguma coisa. Daqui vem o eixo "tempo" em diagonal e as anotações em azul.</p></figcaption>
+      <img src="refs/ref-diagrama.jpg" alt="Halftone mountain with a diagonal diagram arrow" loading="lazy">
+      <figcaption><h3>The diagram arrow</h3><p>The mountain becomes a technical figure: an arrow parallel to the slope measures something. This is where the diagonal "time" axis and the blue annotations come from.</p></figcaption>
     </figure>
     <figure class="ref r2">
-      <img src="refs/ref-nevoa.jpg" alt="Montanhas em pontilhado com névoa entre os planos" loading="lazy">
-      <figcaption><h3>Névoa entre planos</h3><p>Pontilhado FM. Os planos se separam por faixas vazias de névoa; o pico mais claro é ausência de tinta. Pontos soltos formam um halo no céu.</p></figcaption>
+      <img src="refs/ref-nevoa.jpg" alt="Stippled mountains with mist between the layers" loading="lazy">
+      <figcaption><h3>Mist between layers</h3><p>FM stipple. Layers are separated by empty bands of mist; the brightest peak is the absence of ink. Loose dots form a halo in the sky.</p></figcaption>
     </figure>
     <figure class="ref r3">
-      <img src="refs/ref-poeira.jpg" alt="Cordilheira pontilhada que se dissolve em poeira na base" loading="lazy">
-      <figcaption><h3>O chão vira poeira</h3><p>Picos densos em cima, base que se desfaz em ruído. No visualizador é o silêncio: onde não há energia, sobra só grão.</p></figcaption>
+      <img src="refs/ref-poeira.jpg" alt="Stippled mountain range dissolving into dust at the base" loading="lazy">
+      <figcaption><h3>The ground turns to dust</h3><p>Dense peaks on top, a base that breaks up into noise. In the visualizer this is silence: where there is no energy, only grain is left.</p></figcaption>
     </figure>
   </div>
 
   <div class="sec-head" style="margin-top:1rem">
-    <span class="label">Tintas</span>
-    <h3>Três telas de impressão, o mesmo degradê de 0 a 100%</h3>
+    <span class="label">Inks</span>
+    <h3>Three print screens, the same 0 to 100% ramp</h3>
   </div>
   <div class="tiles">
-    <div class="tile"><canvas id="t-am" aria-label="Amostra de retícula AM"></canvas><span class="label">Retícula AM · 45°</span><p>Ponto que cresce. Lê melhor em grandes massas e no movimento lento do pad.</p></div>
-    <div class="tile"><canvas id="t-fm" aria-label="Amostra de pontilhado FM"></canvas><span class="label">Pontilhado FM</span><p>Ponto que se multiplica. Melhor para ataques rápidos e transientes.</p></div>
-    <div class="tile"><canvas id="t-line" aria-label="Amostra de trama de linhas"></canvas><span class="label">Trama de linhas</span><p>Linha que engrossa. Lembra gravura e o pixel da quarta referência.</p></div>
-    <div class="tile"><canvas id="t-fog" aria-label="Amostra de névoa entre planos"></canvas><span class="label">Névoa · planos</span><p>Cada plano clareia na própria base. É isso que separa as cristas.</p></div>
+    <div class="tile"><canvas id="t-am" aria-label="AM halftone sample"></canvas><span class="label">AM halftone · 45°</span><p>The dot grows. Reads best in large masses and in the slow movement of a pad.</p></div>
+    <div class="tile"><canvas id="t-fm" aria-label="FM stipple sample"></canvas><span class="label">FM stipple</span><p>The dot multiplies. Better for fast attacks and transients.</p></div>
+    <div class="tile"><canvas id="t-line" aria-label="Line screen sample"></canvas><span class="label">Line screen</span><p>The line thickens. Recalls engraving and the pixels of the fourth reference.</p></div>
+    <div class="tile"><canvas id="t-fog" aria-label="Sample of mist between layers"></canvas><span class="label">Mist · layers</span><p>Each layer fades at its own base. That is what separates the ridges.</p></div>
   </div>
 
   <div class="sec-head" style="margin-top:1rem">
-    <span class="label">Cor</span>
-    <h3>Uma tinta, um papel, um azul que a gráfica não vê</h3>
+    <span class="label">Color</span>
+    <h3>One ink, one paper, one blue the press can't see</h3>
   </div>
   <div class="palette">
-    <div class="sw" style="background:#E5E4E0"><span>Papel</span><span>#E5E4E0</span></div>
-    <div class="sw" style="background:#D7D6D1"><span>Papel na sombra</span><span>#D7D6D1</span></div>
-    <div class="sw" style="background:#A7A8AC"><span>Névoa</span><span>#A7A8AC</span></div>
-    <div class="sw dark" style="background:#595B61"><span>Grafite</span><span>#595B61</span></div>
-    <div class="sw dark" style="background:#26282D"><span>Tinta</span><span>#26282D</span></div>
-    <div class="sw dark" style="background:#3F7FB5"><span>Azul não-reprod.</span><span>#3F7FB5</span></div>
+    <div class="sw" style="background:#E5E4E0"><span>Paper</span><span>#E5E4E0</span></div>
+    <div class="sw" style="background:#D7D6D1"><span>Paper in shadow</span><span>#D7D6D1</span></div>
+    <div class="sw" style="background:#A7A8AC"><span>Mist</span><span>#A7A8AC</span></div>
+    <div class="sw dark" style="background:#595B61"><span>Graphite</span><span>#595B61</span></div>
+    <div class="sw dark" style="background:#26282D"><span>Ink</span><span>#26282D</span></div>
+    <div class="sw dark" style="background:#3F7FB5"><span>Non-photo blue</span><span>#3F7FB5</span></div>
   </div>
-  <p class="hint">Tinta nunca é preto puro: tem um leve viés azul, como a retícula fotografada. O azul é só para medidas e rótulos, igual ao lápis que o fotolito ignora.</p>
+  <p class="hint">Ink is never pure black: it leans slightly blue, like the photographed halftone. Blue is only for measurements and labels, like the pencil the film camera ignores.</p>
 
   <div class="type">
     <div class="spec">
-      <span class="label">Títulos · Archivo, largura 125, peso 850</span>
-      <div class="big">Cordilheira em Lá menor</div>
+      <span class="label">Headings · Archivo, width 125, weight 850</span>
+      <div class="big">Mountains in A minor</div>
     </div>
     <div class="spec">
-      <span class="label">Leituras · IBM Plex Mono</span>
-      <div class="mono-big">A3 · 220 Hz<br>corte 1,4 kHz · Q 6,0</div>
+      <span class="label">Readouts · IBM Plex Mono</span>
+      <div class="mono-big">A3 · 220 Hz<br>cutoff 1.4 kHz · Q 6.0</div>
     </div>
   </div>
 </section>
 
-<!-- ======================= MAPEAMENTO ======================= -->
+<!-- ======================= MAPPING ======================= -->
 <section aria-labelledby="map-t">
   <div class="sec-head">
-    <span class="label">Especificação</span>
-    <h2 id="map-t">Do som ao relevo</h2>
-    <p>O mapeamento é fixo e legível: quem mexe no knob precisa ver a montanha responder sem legenda.</p>
+    <span class="label">Specification</span>
+    <h2 id="map-t">From sound to landscape</h2>
+    <p>The mapping is fixed and readable: whoever turns the knob should see the mountain respond without a legend.</p>
   </div>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Som</th><th>Relevo</th><th>No protótipo</th></tr></thead>
+      <thead><tr><th>Sound</th><th>Landscape</th><th>In the prototype</th></tr></thead>
       <tbody>
-        <tr><td>Frequência</td><td>Eixo horizontal, escala logarítmica. Graves à esquerda, agudos à direita.</td><td class="mono">30 Hz → 14 kHz, 192 colunas</td></tr>
-        <tr><td>Energia por faixa</td><td>Altura da crista. Cada harmônico vira um pico.</td><td class="mono">FFT 4096, curva γ 2,0</td></tr>
-        <tr><td>Tempo</td><td>Profundidade. O instante atual fica na frente; o passado recua, sobe e clareia.</td><td class="mono">12 planos/s, deriva diagonal</td></tr>
-        <tr><td>Corte do filtro</td><td>Onde a cordilheira acaba. Acima do corte, planície.</td><td class="mono">80 Hz → 9 kHz</td></tr>
-        <tr><td>Ressonância</td><td>Picos estreitos e altos no corte, como agulhas de rocha.</td><td class="mono">Q 0,5 → 22</td></tr>
-        <tr><td>Detune</td><td>Cristas duplas e borda serrilhada.</td><td class="mono">0 → 40 cents</td></tr>
-        <tr><td>Release e eco</td><td>A crista persiste nos planos de trás antes de virar névoa.</td><td class="mono">delay 3/16, feedback 0,35</td></tr>
-        <tr><td>Volume geral</td><td>Poeira de pontos no céu, mais densa perto dos picos.</td><td class="mono">RMS suavizado</td></tr>
-        <tr><td>Silêncio</td><td>Planície de grão.</td><td class="mono">—</td></tr>
+        <tr><td>Frequency</td><td>Horizontal axis, log scale. Lows on the left, highs on the right.</td><td class="mono">30 Hz → 14 kHz, 192 columns</td></tr>
+        <tr><td>Energy per band</td><td>Ridge height. Each harmonic becomes a peak.</td><td class="mono">FFT 4096, γ 2.0 curve</td></tr>
+        <tr><td>Time</td><td>Depth. The current moment is in front; the past recedes, rises and fades.</td><td class="mono">12 layers/s, diagonal drift</td></tr>
+        <tr><td>Filter cutoff</td><td>Where the range ends. Above the cutoff, a plain.</td><td class="mono">80 Hz → 9 kHz</td></tr>
+        <tr><td>Resonance</td><td>Narrow, tall peaks at the cutoff, like rock needles.</td><td class="mono">Q 0.5 → 22</td></tr>
+        <tr><td>Detune</td><td>Double ridges and a jagged edge.</td><td class="mono">0 → 40 cents</td></tr>
+        <tr><td>Release and echo</td><td>The ridge lingers in the back layers before turning to mist.</td><td class="mono">delay 3/16, feedback 0.35</td></tr>
+        <tr><td>Overall volume</td><td>Dust of dots in the sky, denser near the peaks.</td><td class="mono">Smoothed RMS</td></tr>
+        <tr><td>Silence</td><td>A plain of grain.</td><td class="mono">—</td></tr>
       </tbody>
     </table>
   </div>
@@ -178,39 +178,39 @@
 <!-- ======================= HARDWARE ======================= -->
 <section aria-labelledby="hw-t">
   <div class="sec-head">
-    <span class="label">Alvos</span>
-    <h2 id="hw-t">Duas telas para levar a cordilheira</h2>
-    <p>As prévias abaixo rodam o mesmo motor da prova, na resolução real de cada alvo e com a mesma fonte de som. Mexer nos controles lá em cima muda as três telas juntas.</p>
+    <span class="label">Targets</span>
+    <h2 id="hw-t">Two screens to carry the mountains</h2>
+    <p>The previews below run the same engine as the proof, at each target's real resolution and from the same sound source. The controls above change all three screens at once.</p>
   </div>
   <div class="targets">
     <article class="target">
-      <div class="screen screen-fm1"><canvas id="hw-fm1" aria-label="Prévia na tela do FM-1, 240 por 240 pixels"></canvas></div>
+      <div class="screen screen-fm1"><canvas id="hw-fm1" aria-label="Preview on the FM-1 screen, 240 by 240 pixels"></canvas></div>
       <div class="target-body">
         <span class="label">Firmware · FM-1</span>
-        <h3>Tela 240 × 240, RGB565</h3>
+        <h3>240 × 240 screen, RGB565</h3>
         <dl class="specs">
-          <dt>Desenho</dt><dd>Prévia em 1:1, ampliada sem suavização</dd>
-          <dt>Lineatura</dt><dd>70% da prova, mínimo 3 px</dd>
-          <dt>Planos</dt><dd>55% da prova</dd>
-          <dt>Espectro</dt><dd>FFT curta no buffer de áudio do próprio firmware</dd>
+          <dt>Drawing</dt><dd>1:1 preview, scaled up without smoothing</dd>
+          <dt>Screen size</dt><dd>70% of the proof, 3 px minimum</dd>
+          <dt>Layers</dt><dd>55% of the proof</dd>
+          <dt>Spectrum</dt><dd>Short FFT on the firmware's own audio buffer</dd>
         </dl>
-        <p>Cabe como mais uma página do firmware, ao lado de BAILE e RIDDIM. A retícula é periódica, então o mapa de limiar pode ser um ladrilho pequeno repetido em vez de uma tela inteira em memória. Tudo em inteiro, uma coluna por vez, de frente para o fundo.</p>
-        <p class="hint">A verificar no aparelho: custo da FFT por bloco e quantos quadros por segundo sobram depois do áudio.</p>
+        <p>It fits as one more firmware page, next to BAILE and RIDDIM. The halftone is periodic, so the threshold map can be a small repeated tile instead of a full screen in memory. All integer math, one column at a time, front to back.</p>
+        <p class="hint">To check on the device: FFT cost per block and how many frames per second are left after audio.</p>
       </div>
     </article>
     <article class="target">
-      <div class="screen screen-live"><canvas id="hw-live" aria-label="Prévia como device do Ableton Live, 560 por 169 pixels"></canvas></div>
+      <div class="screen screen-live"><canvas id="hw-live" aria-label="Preview as an Ableton Live device, 560 by 169 pixels"></canvas></div>
       <div class="target-body">
         <span class="label">Max for Live · Ableton Live</span>
-        <h3>Faixa de devices, 169 px de altura</h3>
+        <h3>Device strip, 169 px tall</h3>
         <dl class="specs">
-          <dt>Formato</dt><dd>Audio Effect depois do synth (Wavetable, Operator, Drift)</dd>
-          <dt>Desenho</dt><dd>v8ui ou jsui com mgraphics; jit.gl para janela grande</dd>
-          <dt>Tema</dt><dd>Tinta clara sobre o grafite do Live</dd>
-          <dt>Espectro</dt><dd>pfft~ ou fft~ no próprio device</dd>
+          <dt>Format</dt><dd>Audio Effect after the synth (Wavetable, Operator, Drift)</dd>
+          <dt>Drawing</dt><dd>v8ui or jsui with mgraphics; jit.gl for a large window</dd>
+          <dt>Theme</dt><dd>Light ink on Live's graphite</dd>
+          <dt>Spectrum</dt><dd>pfft~ or fft~ inside the device</dd>
         </dl>
-        <p>Entra na cadeia logo depois do instrumento e desenha o que ele toca. O estudo de redesign do Wavetable de <a href="https://sebas.design/wt">Sebastian Mitchell</a> é uma boa régua: cada voz do unison virou uma linha legível. Aqui, cada harmônico vira um pico.</p>
-        <p class="hint">O motor de desenho deste site é JavaScript puro, então porta quase direto para v8ui.</p>
+        <p>It sits in the chain right after the instrument and draws what it plays. <a href="https://sebas.design/wt">Sebastian Mitchell's</a> Wavetable redesign study is a good yardstick: each unison voice became a readable line. Here, each harmonic becomes a peak.</p>
+        <p class="hint">This site's drawing engine is plain JavaScript, so it ports almost directly to v8ui.</p>
       </div>
     </article>
   </div>
@@ -218,20 +218,20 @@
 
 <section aria-labelledby="pr-t">
   <div class="sec-head">
-    <span class="label">Princípios</span>
-    <h2 id="pr-t">Regras para as próximas provas</h2>
+    <span class="label">Principles</span>
+    <h2 id="pr-t">Rules for the next proofs</h2>
   </div>
   <div class="principles">
-    <div><h3>Densidade, não traço</h3><p>Toda forma sai da quantidade de tinta. Sem linhas vetoriais, sem degradê liso, sem brilho.</p></div>
-    <div><h3>O passado clareia</h3><p>Planos de trás perdem contraste e ganham névoa. A frente é escura, áspera e nítida.</p></div>
-    <div><h3>Anotar como engenheiro</h3><p>Rótulos em azul, monoespaçados, com unidade real: Hz, nota, Q. A montanha é um gráfico que dá para ler.</p></div>
-    <div><h3>Ponto grande em tela pequena</h3><p>Em displays de synth, a lineatura cai para 3 a 4 px e o modo de linhas vence: lê bem em 1 bit.</p></div>
-    <div><h3>Serrilhado é honesto</h3><p>A borda dentada vem da grade e do detune. Não suavizar.</p></div>
-    <div><h3>Silêncio também desenha</h3><p>Sem som, sobra planície e poeira. A tela nunca fica vazia.</p></div>
+    <div><h3>Density, not strokes</h3><p>Every shape comes from the amount of ink. No vector lines, no smooth gradients, no glow.</p></div>
+    <div><h3>The past fades</h3><p>Back layers lose contrast and gain mist. The front is dark, rough and sharp.</p></div>
+    <div><h3>Annotate like an engineer</h3><p>Blue monospaced labels with real units: Hz, note, Q. The mountain is a chart you can read.</p></div>
+    <div><h3>Big dots on small screens</h3><p>On synth displays, the screen size drops to 3–4 px and line mode wins: it reads well in 1 bit.</p></div>
+    <div><h3>Jagged is honest</h3><p>The serrated edge comes from the grid and the detune. Don't smooth it.</p></div>
+    <div><h3>Silence draws too</h3><p>Without sound, a plain and dust remain. The screen is never empty.</p></div>
   </div>
 </section>
 
-<footer>Relevo Espectral · prova 01 · Web Audio + canvas 2D, sem bibliotecas. Referências do moodboard fornecidas pelo autor do estudo.</footer>
+<footer>Relevo Espectral · proof 01 · Web Audio + canvas 2D, no libraries. Moodboard references supplied by the study's author.</footer>
 </div>
 
 <script src="assets/relevo.js"></script>

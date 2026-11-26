@@ -11,7 +11,7 @@ const freqCol = f => Math.log(f / FMIN) / LOGR * (COLS - 1);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
 const NOTE_NAMES = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const noteName = f => { const m = Math.round(69 + 12 * Math.log2(f / 440)); return NOTE_NAMES[(m % 12 + 12) % 12] + (Math.floor(m / 12) - 1); };
-const fmtHz = f => f >= 1000 ? (f / 1000).toFixed(f >= 10000 ? 0 : 1).replace(".", ",") + " kHz" : Math.round(f) + " Hz";
+const fmtHz = f => f >= 1000 ? (f / 1000).toFixed(f >= 10000 ? 0 : 1) + " kHz" : Math.round(f) + " Hz";
 
 // ruído 1D estável
 const NZ = new Float32Array(2048);
@@ -312,7 +312,7 @@ function annotate(srf, P, offX, baseFront, stepY, mL, span, sc) {
   }
   const x0 = mL * 0.45, y0 = baseFront - 8 * s, x1 = x0 + (P - 1) * offX, y1 = baseFront - (P - 1) * stepY;
   arrow(cx, x0, y0, x1, y1, s);
-  cx.fillText("tempo · passado", x1 + 4 * s, y1 + 2 * s);
+  cx.fillText("time · past", x1 + 4 * s, y1 + 2 * s);
   const best = findPeak();
   if (best >= 0) {
     const f = colFreq(best), x = Math.round(mL + span * best / (COLS - 1));
@@ -364,16 +364,16 @@ requestAnimationFrame(tick);
 // ---------------------------------------------------------------- UI
 const $ = id => document.getElementById(id);
 function updateReadout() {
-  $("ro-src").innerHTML = `fonte <b>${source === "sim" ? "simulação" : source === "synth" ? "synth · " + par.pattern : "arquivo"}</b>`;
-  $("ro-note").innerHTML = `pico <b>${peakInfo ? noteName(peakInfo) + " · " + fmtHz(peakInfo) : "—"}</b>`;
-  $("ro-cut").innerHTML = `corte <b>${fmtHz(cutoffHz())}</b> · Q <b>${par.res.toFixed(1).replace(".", ",")}</b>`;
-  $("ro-fps").textContent = frozen ? "congelado" : `${fps} fps`;
+  $("ro-src").innerHTML = `source <b>${source === "sim" ? "simulation" : source === "synth" ? "synth · " + par.pattern : "file"}</b>`;
+  $("ro-note").innerHTML = `peak <b>${peakInfo ? noteName(peakInfo) + " · " + fmtHz(peakInfo) : "—"}</b>`;
+  $("ro-cut").innerHTML = `cutoff <b>${fmtHz(cutoffHz())}</b> · Q <b>${par.res.toFixed(1)}</b>`;
+  $("ro-fps").textContent = frozen ? "frozen" : `${fps} fps`;
 }
 const fmts = {
-  cutoff: () => fmtHz(cutoffHz()), res: v => v.toFixed(1).replace(".", ","), spread: v => v + " cents",
-  release: v => v.toFixed(2).replace(".", ",") + " s", cell: v => v.toString().replace(".", ",") + " px",
-  planes: v => v + " planos", height: v => Math.round(v * 100) + "%", jag: v => Math.round(v * 100) + "%",
-  shift: v => v.toFixed(1).replace(".", ",") + " px/plano",
+  cutoff: () => fmtHz(cutoffHz()), res: v => v.toFixed(1), spread: v => v + " cents",
+  release: v => v.toFixed(2) + " s", cell: v => v.toString() + " px",
+  planes: v => v + " layers", height: v => Math.round(v * 100) + "%", jag: v => Math.round(v * 100) + "%",
+  shift: v => v.toFixed(1) + " px/layer",
 };
 for (const id of Object.keys(fmts)) {
   const el = $(id), out = $("o-" + id);
@@ -390,18 +390,18 @@ function seg(id, key, labels) {
     if (key === "mode") { rebuildAll(); drawTiles(); }
   });
 }
-seg("mode", "mode", { am: "retícula", fm: "pontilhado", line: "linhas" });
-seg("pattern", "pattern", { arp: "arpejo", pad: "pad", acid: "acid" });
+seg("mode", "mode", { am: "halftone", fm: "stipple", line: "lines" });
+seg("pattern", "pattern", { arp: "arpeggio", pad: "pad", acid: "acid" });
 $("notes").addEventListener("change", e => { par.notes = e.target.checked; dirty = true; });
 $("play").addEventListener("click", () => {
-  if (source === "synth") { stopSynth(); $("play").textContent = "Tocar synth"; }
-  else { startSynth(); $("play").textContent = "Parar synth"; if (frozen) toggleFreeze(); }
+  if (source === "synth") { stopSynth(); $("play").textContent = "Play synth"; }
+  else { startSynth(); $("play").textContent = "Stop synth"; if (frozen) toggleFreeze(); }
 });
 function toggleFreeze() { frozen = !frozen; $("freeze").setAttribute("aria-pressed", String(frozen)); dirty = true; if (!frozen) lastPush = performance.now(); }
 $("freeze").addEventListener("click", toggleFreeze);
 $("file").addEventListener("change", e => {
   const f = e.target.files && e.target.files[0]; if (!f) return;
-  initAudio(); stopSynth(); $("play").textContent = "Tocar synth"; ac.resume();
+  initAudio(); stopSynth(); $("play").textContent = "Play synth"; ac.resume();
   if (!mediaEl) { mediaEl = new Audio(); mediaEl.loop = true; mediaNode = ac.createMediaElementSource(mediaEl); mediaNode.connect(inBus); }
   mediaEl.src = URL.createObjectURL(f); mediaEl.play().catch(() => {});
   source = "file"; if (frozen) toggleFreeze();
