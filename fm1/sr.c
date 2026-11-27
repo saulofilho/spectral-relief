@@ -108,6 +108,7 @@ void sr_defaults(sr_params_t *p)
     p->height_q8 = 123;          /* 0.48 */
     p->jag_q8 = 115;             /* 0.45 */
     p->shift_q8 = 819;           /* 3.2 px per layer */
+    p->trails_q8 = 0;            /* needs a full framebuffer, so off by default */
 }
 
 void sr_init(sr_t *s, uint32_t w, uint32_t h, uint32_t sample_rate)
@@ -396,13 +397,40 @@ static inline int32_t ink_alpha(const screen_t *sc, int32_t t, uint32_t x, uint3
     return CLAMP(al, 0, 256);
 }
 
-/* fill one strip as 0xRRGGBB, front to back per column (the site's render(), step 2) */
-static void fill(const sr_t *s, uint32_t y0, uint32_t rows, uint32_t *out)
+/* Normal: the direction the surface faces, as RGB like p5's normalMaterial (+x red, up green, toward
+ * the viewer blue, negatives clipped), brightest channel at full. Same formula as the site. */
+static inline rgb_t normal_rgb(int32_t sl, int32_t e, int32_t dz)
+{
+    int32_t nx = CLAMP(sl * 256 / 72, -256, 256) * (77 + (179 * e >> 15)) >> 8;        /* Q8 */
+    int32_t e3 = (int32_t)(((int64_t)e * e >> 15) * e >> 15);                          /* ~exp(-t / (0.35 fall)) */
+    int32_t ny = (205 * e3 >> 15) + (38 * dz >> 8);
+    int32_t l2 = nx * nx + ny * ny, nz = (int32_t)isqrt64((uint64_t)MAX(65536 - l2, 2621));
+    int32_t r = MAX(nx, 0), g = MAX(ny, 0), mx = MAX(MAX(r, g), MAX(nz, 1));
+    rgb_t c = {(uint8_t)(r * 255 / mx), (uint8_t)(g * 255 / mx), (uint8_t)(nz * 255 / mx)};
+    return c;
+}
+
+/* trails: keep the brighter of the new pixel and the old one faded */
+static inline uint32_t trail(uint32_t nw, uint32_t old, int32_t dec)
+{
+    uint32_t o = 0;
+    for (int sh = 0; sh <= 16; sh += 8) {
+        uint32_t a = (nw >> sh) & 255, b = (((old >> sh) & 255) * (uint32_t)dec) >> 8;
+        o |= (a > b ? a : b) << sh;
+    }
+    return o;
+}
+
+/* fill one strip as 0xRRGGBB, front to back per column (the site's render(), step 2).
+ * With blend set, Normal trails mix with what out[] already holds. */
+static void fill(const sr_t *s, uint32_t y0, uint32_t rows, uint32_t *out, int blend)
 {
     const uint32_t W = s->W, H = s->H, P = s->P, y1 = MIN(y0 + rows, H);
     geo_t g; geometry(s, &g);
     screen_t sc; screen_setup(s, &sc);
-    const int alp = s->p.colour == SR_ALPENGLOW;
+    const int alp = s->p.colour == SR_ALPENGLOW, nrm = s->p.colour == SR_NORMAL;
+    const int trails = nrm && blend && s->p.trails_q8;
+    const int32_t dec = 205 + (49 * s->p.trails_q8 >> 8);
     const rgb_t paper = s->p.dark ? PAPER_D : PAPER, ink = s->p.dark ? INK_D : INK;
     const int32_t sw = MAX(1, (5 * MAX(g.sc_q8, 128) + 128) >> 8);
     const int32_t inv_fog = (int32_t)((65536LL * 256) / g.fog_q8);
@@ -438,7 +466,12 @@ static void fill(const sr_t *s, uint32_t y0, uint32_t rows, uint32_t *out)
                 d += ((int32_t)(hh & 255) - 128) * 36 >> 8;
                 d = d * fade >> 8;
                 rgb_t c;
-                if (alp) {
+                if (nrm) {
+                    rgb_t n = normal_rgb(sl, e, dz);
+                    int32_t a = ink_alpha(&sc, CLAMP(d, 0, 256), x, (uint32_t)y);
+                    a = (int32_t)(((int64_t)a * (256 - (154 * dz >> 8)) * (256 - m2) * fade) >> 24);
+                    c.r = (uint8_t)(n.r * a >> 8); c.g = (uint8_t)(n.g * a >> 8); c.b = (uint8_t)(n.b * a >> 8);
+                } else if (alp) {
                     int32_t L = face * e >> 15;
                     if (t4 < 2 * g.crease_q4 + 16) L = MAX(L, 96 + face / 2);  /* rim light on the crest */
                     L = L * (256 - dz / 2) >> 8;
@@ -451,7 +484,8 @@ static void fill(const sr_t *s, uint32_t y0, uint32_t rows, uint32_t *out)
                     int32_t a = ink_alpha(&sc, CLAMP(d, 0, 256), x, (uint32_t)y);
                     c = jitter(mix(paper, ink, a), (int32_t)((hh >> 8) & 7) - 4);
                 }
-                out[(uint32_t)(y - (int32_t)y0) * W + x] = ((uint32_t)c.r << 16) | ((uint32_t)c.g << 8) | c.b;
+                uint32_t i = (uint32_t)(y - (int32_t)y0) * W + x, v = ((uint32_t)c.r << 16) | ((uint32_t)c.g << 8) | c.b;
+                out[i] = trails ? trail(v, out[i], dec) : v;
             }
             top = ry;
         }
@@ -460,6 +494,11 @@ static void fill(const sr_t *s, uint32_t y0, uint32_t rows, uint32_t *out)
         for (int32_t y = (int32_t)y0; y < yb; y++) {
             uint32_t hh = hsh(x, (uint32_t)y, 11);
             rgb_t c;
+            if (nrm) {
+                uint32_t i = (uint32_t)(y - (int32_t)y0) * W + x;
+                out[i] = trails ? trail(0, out[i], dec) : 0;
+                continue;
+            }
             if (alp) {
                 c = skyrow[y - (int32_t)y0];
                 if ((hh & 0xFFFF) > 65400u && y < (int32_t)(H * 40u / 100u)) c = mix(c, WHITE, 150);
@@ -475,7 +514,7 @@ static void fill(const sr_t *s, uint32_t y0, uint32_t rows, uint32_t *out)
     }
 }
 
-void sr_strip888(const sr_t *s, uint32_t y0, uint32_t rows, uint32_t *px) { fill(s, y0, rows, px); }
+void sr_strip888(const sr_t *s, uint32_t y0, uint32_t rows, uint32_t *px) { fill(s, y0, rows, px, 1); }
 
 #define SR_BAND 16u
 static uint32_t strip_tmp[SR_MAXW * SR_BAND];
@@ -491,8 +530,19 @@ void sr_strip565(const sr_t *s, uint32_t y0, uint32_t rows, uint16_t *px, int sw
     /* in bands of 16 rows so the RGB888 scratch stays small (15 KB at 240 px) */
     for (uint32_t done = 0; done < rows; done += SR_BAND) {
         uint32_t n = MIN(SR_BAND, rows - done);
-        fill(s, y0 + done, n, strip_tmp);
-        for (uint32_t i = 0; i < n * s->W; i++) px[done * s->W + i] = to565(strip_tmp[i], swap);
+        fill(s, y0 + done, n, strip_tmp, 0);
+        const int trails = s->p.colour == SR_NORMAL && s->p.trails_q8;
+        const int32_t dec = 205 + (49 * s->p.trails_q8 >> 8);
+        for (uint32_t i = 0; i < n * s->W; i++) {
+            uint16_t *o = &px[done * s->W + i];
+            uint32_t v = strip_tmp[i];
+            if (trails) {                    /* decode the pixel already there, fade it, keep the brighter */
+                uint16_t q = swap ? (uint16_t)((*o >> 8) | (*o << 8)) : *o;
+                uint32_t old = ((uint32_t)((q >> 11) << 3) << 16) | ((uint32_t)(((q >> 5) & 63) << 2) << 8) | (uint32_t)((q & 31) << 3);
+                v = trail(v, old, dec);
+            }
+            *o = to565(v, swap);
+        }
     }
 }
 
@@ -536,7 +586,7 @@ static void marks(const sr_t *s, pen_t *pn)
     geo_t g; geometry(s, &g);
     int32_t sc = CLAMP(g.sc_q8, 205, 333);       /* 0.8 .. 1.3 */
     int32_t W = (int32_t)s->W, H = (int32_t)s->H, P = (int32_t)s->P;
-    pn->col = s->p.colour == SR_ALPENGLOW ? ((uint32_t)WHITE.r << 16 | (uint32_t)WHITE.g << 8 | WHITE.b)
+    pn->col = s->p.colour != SR_PRINT ? ((uint32_t)WHITE.r << 16 | (uint32_t)WHITE.g << 8 | WHITE.b)
                                          : ((uint32_t)NONPHOTO.r << 16 | (uint32_t)NONPHOTO.g << 8 | NONPHOTO.b);
     pn->th = MAX(1, (int32_t)((s->W * 256u / 900u + 128) >> 8));
     int32_t ml = g.ml_q8 >> 8, span = g.span_q8 >> 8, ya = H * 985 / 1000 - pn->th;

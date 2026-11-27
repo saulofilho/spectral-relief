@@ -61,9 +61,9 @@ const psr = obj("prepend sr", [580, 110, 70, 22], { numinlets: 1, numoutlets: 1,
 wire(lb, 0, tb, 0); wire(tb, 2, setPoke, 0); wire(tb, 1, setJs, 0); wire(tb, 0, dsp, 0);
 wire(setPoke, 0, pfft, 1); wire(dsp, 1, psr, 0);
 
-const view = box("v8ui", [300, 200, 440, 161], {
+const view = box("v8ui", [300, 200, 388, 161], {
   filename: "spectral-relief-v8.js", numinlets: 1, numoutlets: 1, outlettype: [""],
-  presentation: 1, presentation_rect: [4, 4, 440, 161], border: 0, parameter_enable: 0,
+  presentation: 1, presentation_rect: [4, 4, 388, 161], border: 0, parameter_enable: 0,
 });
 wire(setJs, 0, view, 0); wire(psr, 0, view, 0);
 
@@ -72,7 +72,7 @@ const ctl = [];
 function tab(name, items, msg, y) {
   const id = box("live.tab", [880, 200 + ctl.length * 40, 100, 20], {
     numinlets: 1, numoutlets: 3, outlettype: ["", "", "float"], parameter_enable: 1,
-    num_lines_patching: 1, num_lines_presentation: 1, presentation: 1, presentation_rect: [450, y, 106, 17],
+    num_lines_patching: 1, num_lines_presentation: 1, presentation: 1, presentation_rect: [398, y, 158, 17],
     varname: name, fontsize: 9,
     saved_attribute_attributes: { valueof: { parameter_enum: items, parameter_longname: name, parameter_shortname: name, parameter_type: 2, parameter_mmax: items.length - 1, parameter_initial: [0], parameter_initial_enable: 1 } },
   });
@@ -89,14 +89,15 @@ function dial(name, msg, min, max, init, x, y, unit) {
   wire(id, 0, pre, 0); wire(pre, 0, view, 0); ctl.push(id);
 }
 tab("Ink", ["dots", "stipple", "lines"], "mode", 4);
-tab("Colour", ["print", "alpenglow"], "colour", 24);
-dial("Depth", "planes", 8, 48, 24, 450, 44, 0);            // 0 = int
-dial("Height", "height", 0.15, 0.75, 0.48, 506, 44, 5);     // 5 = percent
-dial("Rough", "jag", 0, 1, 0.45, 450, 106, 5);
-dial("Screen", "cell", 2.5, 8, 4, 506, 106, 1);             // 1 = float
+tab("Colour", ["print", "alpenglow", "normal"], "colour", 24);
+dial("Depth", "planes", 8, 48, 24, 398, 44, 0);            // 0 = int
+dial("Height", "height", 0.15, 0.75, 0.48, 455, 44, 5);     // 5 = percent
+dial("Rough", "jag", 0, 1, 0.45, 512, 44, 5);
+dial("Screen", "cell", 2.5, 8, 4, 398, 98, 1);             // 1 = float
+dial("Trails", "trails", 0, 1, 0.6, 455, 98, 5);           // Normal only
 const frz = box("live.text", [1000, 600, 44, 18], {
   numinlets: 1, numoutlets: 2, outlettype: ["", ""], parameter_enable: 1, mode: 0, text: "freeze", texton: "frozen",
-  presentation: 1, presentation_rect: [450, 152 - 2, 106, 15], varname: "Freeze",
+  presentation: 1, presentation_rect: [512, 116, 44, 15], varname: "Freeze",
   saved_attribute_attributes: { valueof: { parameter_enum: ["val1", "val2"], parameter_longname: "Freeze", parameter_shortname: "Freeze", parameter_type: 2, parameter_mmax: 1 } },
 });
 const pf = obj("prepend freeze", [1000, 630, 90, 22], { numinlets: 1, numoutlets: 1, outlettype: [""] });

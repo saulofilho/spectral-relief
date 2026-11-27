@@ -21,7 +21,7 @@ for (let i = 0; i < NZ.length; i++) NZ[i] = rnd();
 const vnoise = x => { const i = Math.floor(x), f = x - i, a = NZ[i & 2047], b = NZ[(i + 1) & 2047], s = f * f * (3 - 2 * f); return a + (b - a) * s; };
 
 // ---------------------------------------------------------------- estado
-const par = { colour: "print", mode: "am", cell: 4.5, planes: 40, height: 0.48, jag: 0.45, shift: 3.2, notes: true,
+const par = { colour: "print", trails: 0.6, mode: "am", cell: 4.5, planes: 40, height: 0.48, jag: 0.45, shift: 3.2, notes: true,
   cutoff: 0.55, res: 6, spread: 12, release: 0.45, pattern: "arp" };
 const cutoffHz = () => 80 * Math.pow(9000 / 80, par.cutoff);
 let source = "sim", frozen = false;
@@ -200,6 +200,18 @@ function ramp(st, t) {
   return mixc(st[i], st[i + 1], p - i);
 }
 
+// ---------------------------------------------------------------- Normal (after TORUS)
+// The colour is the direction the surface faces, as in p5's normalMaterial: +x red, up green,
+// toward the viewer blue, negatives clipped to black. Same formula as fm1/sr.c.
+function normalRGB(sl, t, e, dz, faceFall) {
+  let nx = clamp(sl / 0.28, -1, 1) * (0.3 + 0.7 * e);
+  let ny = 0.8 * Math.exp(-t / (0.35 * faceFall)) + 0.15 * dz;
+  const l2 = nx * nx + ny * ny, nz = Math.sqrt(Math.max(0.04, 1 - l2));
+  // full saturation: the brightest channel goes to 255, like the TORUS captures
+  const r = Math.max(0, nx), g = Math.max(0, ny), k = 255 / Math.max(r, g, nz);
+  return [r * k, g * k, nz * k];
+}
+
 // ---------------------------------------------------------------- superfícies
 // A mesma cena desenha em várias telas: a prova grande e as prévias de hardware.
 let dirty = true;
@@ -267,6 +279,12 @@ function render(s, phase) {
   if (alp && (!s.sky || s.sky.length !== H)) { s.sky = []; for (let y = 0; y < H; y++) s.sky.push(ramp(SKY, y / H)); }
   const sky = s.sky;
   const q8 = v => v < 0 ? 0 : v > 255 ? 255 : v | 0;
+  const nrm = par.colour === "normal", trails = nrm && par.trails > 0, dec = 0.8 + 0.19 * par.trails;
+  // trails: what was drawn before fades instead of being erased, like the TORUS canvas that is never cleared
+  const putn = (i, r, g, b) => {
+    if (trails) { const o = px[i]; r = Math.max(r, (o & 255) * dec); g = Math.max(g, ((o >> 8) & 255) * dec); b = Math.max(b, ((o >> 16) & 255) * dec); }
+    px[i] = 0xff000000 | (q8(b) << 16) | (q8(g) << 8) | q8(r);
+  };
   const putc = (i, c, n) => { px[i] = 0xff000000 | (q8(c[2] + n) << 16) | (q8(c[1] + n) << 8) | q8(c[0] + n); };
   const put = (i, a) => {
     const n = (grain[(i * 7) % GL] - 0.5) * 8;
@@ -290,7 +308,10 @@ function render(s, phase) {
         d *= 1 - 0.9 * m * m;
         d += (grain[i] - 0.5) * 0.14;
         d *= fade;
-        if (alp) {
+        if (nrm) {
+          const c = normalRGB(sl, t, e, dz, faceFall), a = ink(d < 0 ? 0 : d > 1 ? 1 : d, thr[i]) * (1 - 0.6 * dz) * (1 - m * m) * fade;
+          putn(i, c[0] * a, c[1] * a, c[2] * a);
+        } else if (alp) {
           // warm light only on faces turned to the sun and a thin rim on the crest
           let L = face * e; if (t < 2 * crease + 1) L = Math.max(L, 0.375 + face / 2);
           L *= 1 - dz / 2;
@@ -303,6 +324,7 @@ function render(s, phase) {
       top = ry;
     }
     // céu com poeira, mais densa perto das cristas
+    if (nrm) { for (let y = 0; y < top; y++) putn(y * W + x, 0, 0, 0); continue; }
     if (alp) { // smooth sky, a few tiny stars in the upper part
       for (let y = 0; y < top; y++) { const i = y * W + x; putc(i, grain[i] > 0.9975 && y < H * 0.4 ? mixc(sky[y], [242, 244, 255], 0.6) : sky[y], 0); }
       continue;
@@ -333,7 +355,7 @@ function findPeak() {
 function annotate(srf, P, offX, baseFront, stepY, mL, span, sc) {
   const { cx, W, H, ridges } = srf;
   const s = Math.max(0.8, Math.min(1.3, sc));
-  const mark = par.colour === "alpenglow" ? "#F2F4FF" : BLUE;
+  const mark = par.colour === "print" ? BLUE : "#F2F4FF";
   cx.strokeStyle = mark; cx.fillStyle = mark; cx.lineWidth = 1.1 * s;
   cx.font = `${Math.round(10.5 * s)}px "IBM Plex Mono", ui-monospace, monospace`;
   const yA = H * 0.985;
@@ -407,7 +429,7 @@ const fmts = {
   cutoff: () => fmtHz(cutoffHz()), res: v => v.toFixed(1), spread: v => v + " cents",
   release: v => v.toFixed(2) + " s", cell: v => v.toString() + " px",
   planes: v => v + " layers", height: v => Math.round(v * 100) + "%", jag: v => Math.round(v * 100) + "%",
-  shift: v => v.toFixed(1) + " px/layer",
+  shift: v => v.toFixed(1) + " px/layer", trails: v => v > 0 ? Math.round(v * 100) + "%" : "off",
 };
 for (const id of Object.keys(fmts)) {
   const el = $(id), out = $("o-" + id);
@@ -426,7 +448,7 @@ function seg(id, key, labels) {
   });
 }
 seg("mode", "mode", { am: "halftone", fm: "stipple", line: "lines" });
-seg("colour", "colour", { print: "print", alpenglow: "alpenglow" });
+seg("colour", "colour", { print: "print", alpenglow: "alpenglow", normal: "normal" });
 seg("pattern", "pattern", { arp: "arpeggio", pad: "pad", acid: "acid" });
 $("notes").addEventListener("change", e => { par.notes = e.target.checked; dirty = true; });
 $("play").addEventListener("click", () => {

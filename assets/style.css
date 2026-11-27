@@ -71,7 +71,6 @@ header p.lede { font-size: 1.15rem; color: var(--ink); }
 .row label output { color: var(--ink); font-variant-numeric: tabular-nums; }
 input[type=range] { width: 100%; accent-color: var(--ink); margin: 0; }
 .seg { display: grid; grid-template-columns: repeat(3, 1fr); border: 1px solid var(--ink); }
-.seg-2 { grid-template-columns: repeat(2, 1fr); }
 .seg button { border: 0; border-right: 1px solid var(--ink); }
 .seg button:last-child { border-right: 0; }
 button, .file {

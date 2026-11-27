@@ -4,8 +4,8 @@ A C port of the site's drawing engine for the FM-1's 240 × 240 RGB565 screen. I
 no allocation and no framebuffer. The per-frame path is all integer math.
 
 - `sr.h`, `sr.c`: the engine. It covers a 1024-point FFT, 96 log columns from 30 Hz to 14 kHz,
-  48 layers of history, three print screens (halftone, stipple, lines), two colour modes (print,
-  Alpenglow Neon) and the non-photo-blue diagram marks.
+  48 layers of history, three print screens (halftone, stipple, lines), three colour modes (print,
+  Alpenglow Neon, Normal with trails) and the non-photo-blue diagram marks.
 - `host/render.c`: a host harness. It plays a small saw synth through the real FFT path, steps the
   engine at 30 frames a second and writes the last frame as a PPM.
 - `host/test.sh`: builds with AddressSanitizer and UBSan, then renders every screen and colour at
@@ -21,9 +21,9 @@ cc -O2 -I fm1 fm1/sr.c fm1/host/render.c -o render
 ./render -mode am -colour alpenglow -o fm1.ppm
 ```
 
-Options: `-w -h -mode am|fm|line -colour print|alpenglow -dark -planes N -cell PX -height F -jag F
--shift PX -pattern arp|pad|acid -seconds S -marks -bench -o FILE`. To render above 240 × 240, build
-with `-DSR_MAXW=1600 -DSR_MAXH=1000 -DSR_MAXP=72`. The two engine studies on the site's
+Options: `-w -h -mode am|fm|line -colour print|alpenglow|normal -dark -planes N -cell PX -height F -jag F
+-shift PX -trails F -pattern arp|pad|acid -seconds S -marks -bench -o FILE`. To render above 240 × 240, build
+with `-DSR_MAXW=1600 -DSR_MAXH=1000 -DSR_MAXP=72`. The engine studies on the site's
 moodboard were made this way.
 
 ## Inside a firmware
@@ -48,7 +48,12 @@ for (uint32_t y = 0; y < 240; y += 40) {
 ```
 
 `sr.p` holds the controls: `mode`, `colour`, `planes`, `cell_q4`, `height_q8`, `jag_q8`,
-`shift_q8`, `dark`. Setting `sr.frozen = 1` holds the picture.
+`shift_q8`, `trails_q8`, `dark`. Setting `sr.frozen = 1` holds the picture.
+
+Normal's trails fade the previous frame instead of erasing it. The renderer reads that frame back
+from the buffer you pass in, so trails only work when every strip goes into one full framebuffer
+(240 × 240 × 2 bytes = 113 KB). With the 240 × 40 strip buffer of the example, leave
+`trails_q8 = 0`.
 
 ## Numbers
 

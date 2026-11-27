@@ -11,6 +11,8 @@ or on any track.
 - `sr.fft~.maxpat`: the `pfft~` subpatch (2048-point FFT, Hann window, amplitude per bin into a `buffer~`)
 - `Spectral Relief.maxpat`: the same patch as plain JSON, for reading and diffs
 - `build.mjs`: builds all three patch files from code (`node m4l/build.mjs`)
+- `test/mock-max.cjs`: runs the script against a mock of Max's JS API and writes a PPM
+  (`node m4l/test/mock-max.cjs <ink 0-2> <colour 0-2> out.ppm`)
 
 ## Install
 
@@ -25,11 +27,12 @@ or on any track.
 | Control | Does |
 |---|---|
 | Ink | dots (AM halftone at 45°), stipple (FM) or lines (15° line screen) |
-| Colour | print (light ink on Live's graphite) or Alpenglow Neon |
+| Colour | print (light ink on Live's graphite), Alpenglow Neon or Normal (after TORUS) |
 | Depth | how many layers of history are drawn |
 | Height | how tall the range is |
 | Rough | ridge noise |
 | Screen | screen cell size in pixels |
+| Trails | Normal only: how slowly the old frame fades |
 | Freeze | holds the picture |
 
 ## Requirements and status

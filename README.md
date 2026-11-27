@@ -8,8 +8,9 @@ Live site: https://saulofilho.github.io/spectral-relief/
 
 The site has the live proof (a built-in Web Audio synth or an audio file of your own), the moodboard,
 the sound → landscape specification and previews on two hardware targets: the FM-1's 240 × 240 screen
-and Ableton Live's device strip (Max for Live). Two colour modes: print (one ink, one paper) and
-Alpenglow Neon (blue world, one low warm light).
+and Ableton Live's device strip (Max for Live). Three colour modes: print (one ink, one paper),
+Alpenglow Neon (blue world, one low warm light) and Normal (surface direction as RGB with fading
+trails, after the [TORUS experiment](https://saulofilho.github.io/TORUS/)).
 
 The engine also exists outside the browser:
 

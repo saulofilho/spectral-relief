@@ -245,7 +245,7 @@
 					"patching_rect": [
 						300,
 						200,
-						440,
+						388,
 						161
 					],
 					"filename": "spectral-relief-v8.js",
@@ -258,7 +258,7 @@
 					"presentation_rect": [
 						4,
 						4,
-						440,
+						388,
 						161
 					],
 					"border": 0,
@@ -287,9 +287,9 @@
 					"num_lines_presentation": 1,
 					"presentation": 1,
 					"presentation_rect": [
-						450,
+						398,
 						4,
-						106,
+						158,
 						17
 					],
 					"varname": "Ink",
@@ -353,9 +353,9 @@
 					"num_lines_presentation": 1,
 					"presentation": 1,
 					"presentation_rect": [
-						450,
+						398,
 						24,
-						106,
+						158,
 						17
 					],
 					"varname": "Colour",
@@ -364,12 +364,13 @@
 						"valueof": {
 							"parameter_enum": [
 								"print",
-								"alpenglow"
+								"alpenglow",
+								"normal"
 							],
 							"parameter_longname": "Colour",
 							"parameter_shortname": "Colour",
 							"parameter_type": 2,
-							"parameter_mmax": 1,
+							"parameter_mmax": 2,
 							"parameter_initial": [
 								0
 							],
@@ -415,7 +416,7 @@
 					"parameter_enable": 1,
 					"presentation": 1,
 					"presentation_rect": [
-						450,
+						398,
 						44,
 						44,
 						48
@@ -475,7 +476,7 @@
 					"parameter_enable": 1,
 					"presentation": 1,
 					"presentation_rect": [
-						506,
+						455,
 						44,
 						44,
 						48
@@ -535,8 +536,8 @@
 					"parameter_enable": 1,
 					"presentation": 1,
 					"presentation_rect": [
-						450,
-						106,
+						512,
+						44,
 						44,
 						48
 					],
@@ -595,8 +596,8 @@
 					"parameter_enable": 1,
 					"presentation": 1,
 					"presentation_rect": [
-						506,
-						106,
+						398,
+						98,
 						44,
 						48
 					],
@@ -639,6 +640,66 @@
 			{
 				"box": {
 					"id": "obj-26",
+					"maxclass": "live.dial",
+					"patching_rect": [
+						1000,
+						440,
+						44,
+						48
+					],
+					"numinlets": 1,
+					"numoutlets": 2,
+					"outlettype": [
+						"",
+						"float"
+					],
+					"parameter_enable": 1,
+					"presentation": 1,
+					"presentation_rect": [
+						455,
+						98,
+						44,
+						48
+					],
+					"varname": "Trails",
+					"fontsize": 9,
+					"saved_attribute_attributes": {
+						"valueof": {
+							"parameter_longname": "Trails",
+							"parameter_shortname": "Trails",
+							"parameter_type": 0,
+							"parameter_mmin": 0,
+							"parameter_mmax": 1,
+							"parameter_initial": [
+								0.6
+							],
+							"parameter_initial_enable": 1,
+							"parameter_unitstyle": 5
+						}
+					}
+				}
+			},
+			{
+				"box": {
+					"id": "obj-27",
+					"maxclass": "newobj",
+					"text": "prepend trails",
+					"patching_rect": [
+						1060,
+						462,
+						90,
+						22
+					],
+					"numinlets": 1,
+					"numoutlets": 1,
+					"outlettype": [
+						""
+					]
+				}
+			},
+			{
+				"box": {
+					"id": "obj-28",
 					"maxclass": "live.text",
 					"patching_rect": [
 						1000,
@@ -658,9 +719,9 @@
 					"texton": "frozen",
 					"presentation": 1,
 					"presentation_rect": [
-						450,
-						150,
-						106,
+						512,
+						116,
+						44,
 						15
 					],
 					"varname": "Freeze",
@@ -680,7 +741,7 @@
 			},
 			{
 				"box": {
-					"id": "obj-27",
+					"id": "obj-29",
 					"maxclass": "newobj",
 					"text": "prepend freeze",
 					"patching_rect": [
@@ -1026,6 +1087,30 @@
 				"patchline": {
 					"source": [
 						"obj-27",
+						0
+					],
+					"destination": [
+						"obj-13",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-28",
+						0
+					],
+					"destination": [
+						"obj-29",
+						0
+					]
+				}
+			},
+			{
+				"patchline": {
+					"source": [
+						"obj-29",
 						0
 					],
 					"destination": [

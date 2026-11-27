@@ -3,9 +3,10 @@
  *
  * The device's pfft~ (sr.fft~.maxpat) writes one amplitude per FFT bin into a buffer~;
  * this script reads it 25 times a second, keeps 72 layers of history and draws the range.
- * Mono print and Alpenglow Neon colour; halftone, stipple or line screen.
+ * Colour: print, Alpenglow Neon or Normal (surface direction as RGB, after TORUS, with trails);
+ * halftone, stipple or line screen.
  *
- * Messages: setbuf <name>, sr <Hz>, mode 0|1|2, colour 0|1, planes N, height 0..1,
+ * Messages: setbuf <name>, sr <Hz>, mode 0|1|2, colour 0|1|2, trails 0..1, planes N, height 0..1,
  *           jag 0..1, cell px, shift px, freeze 0|1, bang (redraw) */
 autowatch = 1;
 inlets = 1;
@@ -16,7 +17,7 @@ mgraphics.autofill = 0;
 
 var COLS = 192, FMIN = 30, FMAX = 14000, HMAX = 72, FFT_N = 2048, PUSH_MS = 1000 / 12;
 var LOGR = Math.log(FMAX / FMIN);
-var par = { mode: 0, colour: 0, planes: 24, height: 0.48, jag: 0.45, cell: 4, shift: 2.2, frozen: 0 };
+var par = { mode: 0, colour: 0, trails: 0.6, planes: 24, height: 0.48, jag: 0.45, cell: 4, shift: 2.2, frozen: 0 };
 var fs = 48000, buf = null;
 var live = zeros(COLS), smooth = zeros(COLS), tmp = zeros(COLS), ring = [], head = 0, lastPush = Date.now(), dust = 0;
 for (var k = 0; k < HMAX; k++) ring.push(zeros(COLS));
@@ -42,7 +43,8 @@ function hash(x, y) {
 function setbuf(name) { buf = new Buffer(name); }
 function sr(v) { if (v > 0) fs = v; }
 function mode(v) { par.mode = clamp(v | 0, 0, 2); mgraphics.redraw(); }
-function colour(v) { par.colour = clamp(v | 0, 0, 1); mgraphics.redraw(); }
+function colour(v) { par.colour = clamp(v | 0, 0, 2); mgraphics.redraw(); }
+function trails(v) { par.trails = clamp(v, 0, 1); }
 function planes(v) { par.planes = clamp(Math.round(v), 6, HMAX - 2); }
 function height(v) { par.height = clamp(v, 0.1, 0.8); }
 function jag(v) { par.jag = clamp(v, 0, 1); }
@@ -155,7 +157,7 @@ function toneAt(x, y) {
 		var face = sl < 0 ? -sl / 0.28 : 0, L = face * e;
 		if (t < 2 * G.crease + 1) L = Math.max(L, 0.375 + face / 2);
 		L *= 1 - dz / 2;
-		return { d: clamp(d, 0, 1), dz: dz, m: m, L: L };
+		return { d: clamp(d, 0, 1), dz: dz, m: m, L: L, sl: sl, e: e, t: t };
 	}
 	return null;
 }
@@ -168,6 +170,15 @@ var LIT = hxs([0xE39E64, 0xE28868, 0xD37C92, 0xE193A3]), DOTC = hxs([0x002732, 0
 var PAPER = hx(0x242528), INK = hx(0xD6D5D0);      /* Live's dark theme: light ink on graphite */
 function mixc(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
 function ramp(st, t) { t = clamp(t, 0, 1); var p = t * (st.length - 1), i = Math.min(p | 0, st.length - 2); return mixc(st[i], st[i + 1], p - i); }
+/* Normal, after TORUS: p5's normalMaterial colours (+x red, up green, toward the viewer blue),
+ * brightest channel at full. Same formula as the site and fm1/sr.c. */
+function normalRGB(info) {
+	var nx = clamp(info.sl / 0.28, -1, 1) * (0.3 + 0.7 * info.e);
+	var ny = 0.8 * Math.exp(-info.t / (0.35 * G.faceFall)) + 0.15 * info.dz;
+	var nz = Math.sqrt(Math.max(0.04, 1 - nx * nx - ny * ny)), r = Math.max(0, nx), g = Math.max(0, ny);
+	var k = (1 - 0.6 * info.dz) * (1 - info.m * info.m) / Math.max(r, g, nz);
+	return [r * k, g * k, nz * k];
+}
 function q(c) { return Math.round(c[0] * 15) + "," + Math.round(c[1] * 15) + "," + Math.round(c[2] * 15); }
 
 /* shapes are batched per colour: one fill per group keeps mgraphics fast */
@@ -177,15 +188,16 @@ function add(c, kind, a, b, cc, d) {
 	if (!g) g = groups[key] = { c: c, s: [] };
 	g.s.push(kind, a, b, cc, d);
 }
+var cx = mgraphics, off = null, offW = 0, offH = 0;   /* off: the persistent surface for trails */
 function flush() {
 	for (var key in groups) {
 		var g = groups[key], s = g.s;
-		mgraphics.set_source_rgba(g.c[0], g.c[1], g.c[2], 1);
+		cx.set_source_rgba(g.c[0], g.c[1], g.c[2], 1);
 		for (var i = 0; i < s.length; i += 5) {
-			if (s[i] === 0) mgraphics.ellipse(s[i + 1], s[i + 2], s[i + 3], s[i + 4]);
-			else mgraphics.rectangle(s[i + 1], s[i + 2], s[i + 3], s[i + 4]);
+			if (s[i] === 0) cx.ellipse(s[i + 1], s[i + 2], s[i + 3], s[i + 4]);
+			else cx.rectangle(s[i + 1], s[i + 2], s[i + 3], s[i + 4]);
 		}
-		mgraphics.fill();
+		cx.fill();
 	}
 	groups = {};
 }
@@ -197,17 +209,31 @@ function paint() {
 	var W = Math.round(sz[0]), H = Math.round(sz[1]);
 	if (W < 20 || H < 20) return;
 	computeRidges(W, H);
-	var alp = par.colour === 1, cellPx = par.cell, x, y, info;
+	var alp = par.colour === 1, nrm = par.colour === 2, cellPx = par.cell, x, y, info;
+	var trailing = nrm && par.trails > 0;
 	groups = {};
+	cx = mgraphics;
+	if (trailing) {
+		/* like the TORUS canvas that is never cleared: draw into a kept surface and only darken it */
+		if (!off || offW !== W || offH !== H) { off = new MGraphics(W, H); offW = W; offH = H; off.set_source_rgba(0, 0, 0, 1); off.rectangle(0, 0, W, H); off.fill(); }
+		cx = off;
+		var dec = Math.pow(0.8 + 0.19 * par.trails, 2.4);      /* the site fades per frame at 60 fps; this runs at 25 */
+		cx.set_source_rgba(0, 0, 0, 1 - dec);
+		cx.rectangle(0, 0, W, H);
+		cx.fill();
+	} else off = null;
 
 	/* ground: graphite paper, or the Alpenglow sky gradient */
-	if (alp) {
-		var pat = mgraphics.pattern_create_linear(0, 0, 0, H);
-		for (var s = 0; s < SKY.length; s++) pat.add_color_stop_rgba(s / (SKY.length - 1), SKY[s][0], SKY[s][1], SKY[s][2], 1);
-		mgraphics.set_source(pat);
-	} else mgraphics.set_source_rgba(PAPER[0], PAPER[1], PAPER[2], 1);
-	mgraphics.rectangle(0, 0, W, H);
-	mgraphics.fill();
+	if (!trailing) {
+		if (alp) {
+			var pat = cx.pattern_create_linear(0, 0, 0, H);
+			for (var s = 0; s < SKY.length; s++) pat.add_color_stop_rgba(s / (SKY.length - 1), SKY[s][0], SKY[s][1], SKY[s][2], 1);
+			cx.set_source(pat);
+		} else if (nrm) cx.set_source_rgba(0, 0, 0, 1);
+		else cx.set_source_rgba(PAPER[0], PAPER[1], PAPER[2], 1);
+		cx.rectangle(0, 0, W, H);
+		cx.fill();
+	}
 
 	/* Alpenglow: the masses' body colour on a coarse grid, before the dots */
 	if (alp) {
@@ -221,7 +247,7 @@ function paint() {
 		flush();
 	}
 
-	function inkOf(info) { return alp ? ramp(DOTC, info.dz) : INK; }
+	function inkOf(info) { return nrm ? normalRGB(info) : alp ? ramp(DOTC, info.dz) : INK; }
 	function toneOf(info) { return alp ? info.d * (1 - 0.7 * info.L) : info.d; }
 
 	if (par.mode === 0) {                                   /* AM halftone, 45 degrees */
@@ -230,7 +256,7 @@ function paint() {
 			x = (u - v) * a; y = (u + v) * a;                /* lattice of pitch cell, turned 45 degrees */
 			if (x < -cellPx || x > W + cellPx || y < -cellPx || y > H + cellPx) continue;
 			info = toneAt(x, y);
-			var t = info ? toneOf(info) : (alp ? 0 : dust * 0.07 * Math.pow(y / H, 4));
+			var t = info ? toneOf(info) : (alp || nrm ? 0 : dust * 0.07 * Math.pow(y / H, 4));
 			if (t < 0.02) continue;
 			var r = cellPx * Math.sqrt(t / Math.PI) * 1.05;
 			add(info ? inkOf(info) : INK, 0, x - r, y - r, 2 * r, 2 * r);
@@ -239,7 +265,7 @@ function paint() {
 		var b = Math.max(1.5, cellPx / 2.5);
 		for (y = 0; y < H; y += b) for (x = 0; x < W; x += b) {
 			info = toneAt(x, y);
-			var t2 = info ? toneOf(info) : (alp ? 0 : dust * 0.04 * Math.pow(y / H, 4));
+			var t2 = info ? toneOf(info) : (alp || nrm ? 0 : dust * 0.04 * Math.pow(y / H, 4));
 			if (t2 * t2 > hash(x / b, y / b) * 0.9) add(info ? inkOf(info) : INK, 1, x, y, b, b);
 		}
 	} else {                                                /* line screen: dashes along 15 degrees */
@@ -257,6 +283,7 @@ function paint() {
 		}
 	}
 	flush();
+	if (trailing) mgraphics.image_surface_draw(new Image(off));
 }
 
 function onresize() { mgraphics.redraw(); }

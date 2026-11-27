@@ -21,7 +21,7 @@
 <header>
   <div class="meta">
     <span class="label">Study · music visualizer for synthesizers</span>
-    <span class="label">Proof 02 · Nov 2026</span>
+    <span class="label">Proof 03 · Nov 2026</span>
   </div>
   <h1>Spectral Relief</h1>
   <p class="lede">Sound becomes a mountain range. Each moment of the spectrum is a ridge; time pushes the ridges back, where they fade and vanish into the mist. The ink comes from the print shop: halftone, stipple or line screen, never a smooth gradient.</p>
@@ -68,11 +68,13 @@
       <div class="group">
         <div class="row">
           <label for="colour">Colour <output id="o-colour">print</output></label>
-          <div class="seg seg-2" role="group" aria-label="Colour" id="colour">
+          <div class="seg" role="group" aria-label="Colour" id="colour">
             <button data-v="print" aria-pressed="true">Print</button>
             <button data-v="alpenglow" aria-pressed="false">Alpenglow</button>
+            <button data-v="normal" aria-pressed="false">Normal</button>
           </div>
         </div>
+        <div class="row"><label for="trails">Trails · Normal only <output id="o-trails"></output></label><input id="trails" type="range" min="0" max="1" step="0.01" value="0.6"></div>
         <div class="row">
           <label for="mode">Ink <output id="o-mode">halftone</output></label>
           <div class="seg" role="group" aria-label="Print mode" id="mode">
@@ -162,6 +164,23 @@
     <div class="sw" style="background:#D37C92"><span>Light, fall</span><span>#D37C92</span></div>
   </div>
 
+  <div class="sec-head" style="margin-top:1rem">
+    <span class="label">Colour · third mode · after <a href="https://saulofilho.github.io/TORUS/">TORUS</a></span>
+    <h3>Normal: the colour is the direction the rock faces</h3>
+    <p>Borrowed from the TORUS experiment, which paints a spinning torus with p5's <code>normalMaterial</code> and never clears the canvas. Here each slope is coloured by where it points: faces turned right go red, crests looking up go green, faces looking at you go blue, on black. With Trails on, the old frame fades instead of being erased, so the past ridges leave the same ribbons the torus left.</p>
+  </div>
+  <figure class="ref alp-study">
+    <img src="refs/study-normal.jpg" alt="Engine study in Normal colour with trails: blue, magenta and green ribbons of ridges on black" loading="lazy">
+  </figure>
+  <div class="palette">
+    <div class="sw dark" style="background:#000000"><span>Ground</span><span>#000000</span></div>
+    <div class="sw dark" style="background:#0000FF"><span>Facing you</span><span>+z · #0000FF</span></div>
+    <div class="sw dark" style="background:#FF00FF"><span>Facing right</span><span>+x+z · #FF00FF</span></div>
+    <div class="sw" style="background:#FF0000"><span>Turned right</span><span>+x · #FF0000</span></div>
+    <div class="sw" style="background:#00FFFF"><span>Crest, up</span><span>+y+z · #00FFFF</span></div>
+    <div class="sw" style="background:#00FF00"><span>Looking up</span><span>+y · #00FF00</span></div>
+  </div>
+
   <div class="type">
     <div class="spec">
       <span class="label">Headings · Archivo, width 125, weight 850</span>
@@ -218,7 +237,7 @@
           <dt>Layers</dt><dd>55% of the proof</dd>
           <dt>Spectrum</dt><dd>1024-point integer FFT on the firmware's audio</dd>
         </dl>
-        <p>The engine is ported to C in <a href="https://github.com/saulofilho/spectral-relief/tree/main/fm1"><code>fm1/</code></a>: a 1024-point integer FFT, no libm, no framebuffer. It fills the screen in strips, the way the FM-1 firmwares already draw, and computes the print screens per pixel instead of storing a threshold map. Both colour modes and all three screens are in.</p>
+        <p>The engine is ported to C in <a href="https://github.com/saulofilho/spectral-relief/tree/main/fm1"><code>fm1/</code></a>: a 1024-point integer FFT, no libm, no framebuffer. It fills the screen in strips, the way the FM-1 firmwares already draw, and computes the print screens per pixel instead of storing a threshold map. All three colour modes and screens are in; Normal's trails need a full 240 × 240 framebuffer, so they are off by default.</p>
         <p class="hint">Runs under 1 ms a frame on a laptop. Not yet run on the device: the next step is a firmware page, measuring FFT cost per block and the frame rate left after audio.</p>
       </div>
     </article>
@@ -234,7 +253,7 @@
           <dt>Spectrum</dt><dd>pfft~ 2048, Hann, into a buffer~</dd>
         </dl>
         <p>It sits in the chain right after the instrument and draws what it plays. <a href="https://sebas.design/wt">Sebastian Mitchell's</a> Wavetable redesign study is a good yardstick: each unison voice became a readable line. Here, each harmonic becomes a peak.</p>
-        <p>The device is in <a href="https://github.com/saulofilho/spectral-relief/tree/main/m4l"><code>m4l/</code></a>: <code>pfft~</code> writes one amplitude per bin into a <code>buffer~</code>, and a <code>v8ui</code> script with the same engine draws it, with Ink, Colour, Depth, Height, Rough, Screen and Freeze as Live parameters.</p>
+        <p>The device is in <a href="https://github.com/saulofilho/spectral-relief/tree/main/m4l"><code>m4l/</code></a>: <code>pfft~</code> writes one amplitude per bin into a <code>buffer~</code>, and a <code>v8ui</code> script with the same engine draws it, with Ink, Colour, Depth, Height, Rough, Screen, Trails and Freeze as Live parameters.</p>
         <p class="hint">Built and tested against a mock of Max's JavaScript API; not yet opened in Live.</p>
       </div>
     </article>
@@ -256,7 +275,7 @@
   </div>
 </section>
 
-<footer>Spectral Relief · proof 02 · Web Audio + canvas 2D, no libraries · FM-1 port in C · Max for Live device. Two moodboard references supplied by the study's author; the studies are rendered by the engine.</footer>
+<footer>Spectral Relief · proof 03 · Web Audio + canvas 2D, no libraries · FM-1 port in C · Max for Live device. Two moodboard references supplied by the study's author; the studies are rendered by the engine.</footer>
 </div>
 
 <script src="assets/spectral-relief.js"></script>

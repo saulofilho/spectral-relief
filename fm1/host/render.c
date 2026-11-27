@@ -4,8 +4,8 @@
  *   cc -O2 -I.. -DSR_MAXW=1600 -DSR_MAXH=1000 -DSR_MAXP=72 ../sr.c render.c -o render
  *   ./render -w 240 -h 240 -mode am -colour print -o out.ppm
  *
- * Options: -w -h  -mode am|fm|line  -colour print|alpenglow  -dark  -planes N  -cell PX
- *          -height F  -jag F  -shift PX  -pattern arp|pad|acid  -seconds S  -marks  -bench  -o FILE */
+ * Options: -w -h  -mode am|fm|line  -colour print|alpenglow|normal  -dark  -planes N  -cell PX
+ *          -height F  -jag F  -shift PX  -trails F  -pattern arp|pad|acid  -seconds S  -marks  -bench  -o FILE */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -92,7 +92,8 @@ int main(int argc, char **argv)
         if (!strcmp(a, "-w")) { w = atoi(v); i++; }
         else if (!strcmp(a, "-h")) { h = atoi(v); i++; }
         else if (!strcmp(a, "-mode")) { p.mode = !strcmp(v, "fm") ? SR_FM : !strcmp(v, "line") ? SR_LINE : SR_AM; i++; }
-        else if (!strcmp(a, "-colour")) { p.colour = !strcmp(v, "alpenglow") ? SR_ALPENGLOW : SR_PRINT; i++; }
+        else if (!strcmp(a, "-colour")) { p.colour = !strcmp(v, "alpenglow") ? SR_ALPENGLOW : !strcmp(v, "normal") ? SR_NORMAL : SR_PRINT; i++; }
+        else if (!strcmp(a, "-trails")) { p.trails_q8 = (uint16_t)(atof(v) * 256); i++; }
         else if (!strcmp(a, "-dark")) p.dark = 1;
         else if (!strcmp(a, "-planes")) { p.planes = atoi(v); i++; }
         else if (!strcmp(a, "-cell")) { p.cell_q4 = (uint16_t)(atof(v) * 16); i++; }
@@ -125,6 +126,8 @@ int main(int argc, char **argv)
             }
         }
         cpu += (double)(clock() - t0) / CLOCKS_PER_SEC;
+        if (p.trails_q8 && fr < frames - 1)                  /* trails need every frame in the same buffer */
+            for (uint32_t y = 0; y < h; y += 40) sr_strip888(&S, y, h - y < 40 ? h - y : 40, PX + y * w);
     }
     for (uint32_t y = 0; y < h; y += 40) {
         uint32_t n = h - y < 40 ? h - y : 40;

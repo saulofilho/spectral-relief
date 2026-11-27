@@ -33,17 +33,20 @@
 #define SR_PUSH_US 83333u     /* 12 layers per second */
 
 enum { SR_AM = 0, SR_FM = 1, SR_LINE = 2 };       /* print screen */
-enum { SR_PRINT = 0, SR_ALPENGLOW = 1 };          /* colour */
+enum { SR_PRINT = 0, SR_ALPENGLOW = 1, SR_NORMAL = 2 };   /* colour */
 
 typedef struct {
     uint8_t mode;          /* SR_AM / SR_FM / SR_LINE */
-    uint8_t colour;        /* SR_PRINT / SR_ALPENGLOW */
+    uint8_t colour;        /* SR_PRINT / SR_ALPENGLOW / SR_NORMAL (surface direction as RGB, after TORUS) */
     uint8_t planes;        /* layers drawn, 6..SR_MAXP */
     uint8_t dark;          /* print colour on a dark ground (light ink) */
     uint16_t cell_q4;      /* screen cell in px, Q4 (3.0 px = 48) */
     uint16_t height_q8;    /* range height as a fraction of H, Q8 (0.48 = 123) */
     uint16_t jag_q8;       /* roughness, Q8 */
     uint16_t shift_q8;     /* diagonal drift in px per layer, Q8 */
+    uint16_t trails_q8;    /* SR_NORMAL only: 0 = off, 256 = longest. The old frame fades instead of being
+                            * erased, so the strip buffers passed in must keep the last frame (a full
+                            * 240 x 240 framebuffer, 113 KB in RGB565). */
 } sr_params_t;
 
 typedef struct {
