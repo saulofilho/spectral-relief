@@ -36,6 +36,8 @@ files as they are.
 - `index.html`: the page
 - `assets/spectral-relief.js`: drawing engine (canvas 2D, no libraries) and synth
 - `assets/style.css`: styles
+- `assets/icons/`, `assets/favicon.svg`, `site.webmanifest`: icons; `assets/og-image.jpg`: the share card
+  (both drawn by `tools/brand.swift`)
 - `refs/`: moodboard references (`ref-*`) and studies rendered by the C engine (`study-*`)
 - `fm1/`: C port and host harness
 - `m4l/`: Max for Live device and its build script
