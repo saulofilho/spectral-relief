@@ -226,7 +226,8 @@ function makeSurface(canvas, opts = {}) {
     if (opts.fixed) [w, h] = opts.fixed;
     else {
       const r = canvas.getBoundingClientRect(); if (!r.width) return;
-      const k = r.width > 1100 ? 1100 / r.width : 1;
+      const cap = canvas.closest(".is-full") ? 1500 : 1100;   // sharper in fullscreen, still under budget
+      const k = r.width > cap ? cap / r.width : 1;
       w = Math.max(200, Math.round(r.width * k)); h = Math.max(160, Math.round(r.height * k));
     }
     s.W = w; s.H = h; canvas.width = w; canvas.height = h;
@@ -444,7 +445,7 @@ function seg(id, key, labels) {
     for (const o of g.querySelectorAll("button")) o.setAttribute("aria-pressed", o === b ? "true" : "false");
     par[key] = b.dataset.v; $("o-" + id).textContent = labels[b.dataset.v]; dirty = true;
     if (key === "mode") { rebuildAll(); drawTiles(); }
-    if (key === "colour") document.body.dataset.colour = b.dataset.v;
+    if (key === "colour") { document.body.dataset.colour = b.dataset.v; for (const sf of surfaces) if (sf.px) sf.px.fill(0xff000000); }   // trails start from black
   });
 }
 seg("mode", "mode", { am: "halftone", fm: "stipple", line: "lines" });
@@ -457,6 +458,56 @@ $("play").addEventListener("click", () => {
 });
 function toggleFreeze() { frozen = !frozen; $("freeze").setAttribute("aria-pressed", String(frozen)); dirty = true; if (!frozen) lastPush = performance.now(); }
 $("freeze").addEventListener("click", toggleFreeze);
+
+// ---------------------------------------------------------------- fullscreen
+// The Fullscreen API where it exists; a fixed full-viewport stage where it doesn't (iPhone Safari).
+const stage = $("stage");
+const fsApi = stage.requestFullscreen ? "requestFullscreen" : stage.webkitRequestFullscreen ? "webkitRequestFullscreen" : null;
+const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+let idleT = 0;
+function syncFs() {
+  $("fs-play").textContent = source === "synth" ? "Stop synth" : "Play synth";
+  $("fs-colour").textContent = "Colour · " + par.colour;
+  $("fs-ink").textContent = "Ink · " + { am: "halftone", fm: "stipple", line: "lines" }[par.mode];
+}
+function setFull(on) {
+  stage.classList.toggle("is-full", on);
+  document.documentElement.style.overflow = on ? "hidden" : "";
+  syncFs(); wake();
+}
+function enterFull() {
+  if (fsApi) { const r = stage[fsApi](); if (r && r.catch) r.catch(() => {}); }   // refused: the CSS stage still fills the window
+  setFull(true);
+}
+function exitFull() {
+  if (fsElement()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+  setFull(false);
+}
+const toggleFull = () => (stage.classList.contains("is-full") ? exitFull() : enterFull());
+for (const ev of ["fullscreenchange", "webkitfullscreenchange"])
+  document.addEventListener(ev, () => { if (!fsElement() && stage.classList.contains("is-full")) setFull(false); });
+function wake() {   // the bar hides after 2.5 s without the mouse, like a video player
+  stage.classList.remove("idle"); clearTimeout(idleT);
+  if (stage.classList.contains("is-full")) idleT = setTimeout(() => stage.classList.add("idle"), 2500);
+}
+stage.addEventListener("pointermove", wake);
+stage.addEventListener("pointerdown", wake);
+$("fullscreen").addEventListener("click", enterFull);
+$("fs-open").addEventListener("click", enterFull);
+$("fs-exit").addEventListener("click", exitFull);
+$("cv").addEventListener("dblclick", toggleFull);
+$("fs-play").addEventListener("click", () => { $("play").click(); syncFs(); });
+function cycle(id, values, key) {
+  const i = values.indexOf(par[key]), next = values[(i + 1) % values.length];
+  $(id).querySelector(`button[data-v="${next}"]`).click(); syncFs();
+}
+$("fs-colour").addEventListener("click", () => cycle("colour", ["print", "alpenglow", "normal"], "colour"));
+$("fs-ink").addEventListener("click", () => cycle("mode", ["am", "fm", "line"], "mode"));
+document.addEventListener("keydown", e => {
+  if (e.target.closest("input, textarea, select") || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (e.key === "f" || e.key === "F") { e.preventDefault(); toggleFull(); }
+  else if (e.key === "Escape" && stage.classList.contains("is-full")) exitFull();
+});
 $("file").addEventListener("change", e => {
   const f = e.target.files && e.target.files[0]; if (!f) return;
   initAudio(); stopSynth(); $("play").textContent = "Play synth"; ac.resume();

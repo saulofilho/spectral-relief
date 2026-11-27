@@ -166,3 +166,30 @@ a:hover { color: var(--nonphoto); }
 /* ---------- Alpenglow study ---------- */
 .alp-study img { mix-blend-mode: normal; filter: none; }
 code { font-family: var(--mono); font-size: 0.86em; }
+
+/* ---------- fullscreen ---------- */
+.wide { width: 100%; display: flex; justify-content: center; gap: 0.6rem; align-items: baseline; }
+.wide .label, .fs-bar .label { font-size: 0.62rem; color: inherit; opacity: 0.6; }
+.fs-open {
+  position: absolute; right: 8px; top: 8px; padding: 6px; line-height: 0;
+  background: color-mix(in srgb, var(--paper) 80%, transparent); border: 1px solid var(--ink);
+}
+.fs-bar { display: none; }
+.stage.is-full {
+  position: fixed; inset: 0; z-index: 50; width: 100vw; height: 100vh; height: 100dvh;
+  aspect-ratio: auto; max-width: none; outline: 0; background: #000;
+}
+.stage:fullscreen { width: 100vw; height: 100vh; aspect-ratio: auto; outline: 0; background: #000; }
+.stage.is-full .crop, .stage.is-full .fs-open { display: none; }
+.stage.is-full .fs-bar {
+  display: flex; flex-wrap: wrap; gap: 6px; position: absolute; left: 50%; top: max(16px, env(safe-area-inset-top, 0px));
+  transform: translateX(-50%); transition: opacity 0.4s; max-width: calc(100vw - 32px);
+}
+.stage.is-full .fs-bar button {
+  background: rgba(20, 20, 22, 0.72); color: #EDEDE9; border-color: rgba(237, 237, 233, 0.35);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+}
+.stage.is-full .fs-bar button:hover { background: rgba(60, 60, 64, 0.85); }
+.stage.is-full.idle .fs-bar { opacity: 0; pointer-events: none; }
+.stage.is-full.idle { cursor: none; }
+@media (prefers-reduced-motion: reduce) { .stage.is-full .fs-bar { transition: none; } }
